@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo Butters</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Red Hat Mono', monospace;
+            background: #000;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        header {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #222;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #888;
+            font-weight: 300;
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .project {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #111;
+            border: 1px solid #222;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .project:hover {
+            border-color: #666;
+            transform: translateX(0.5rem);
+        }
+
+        .project h3 {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .project p {
+            font-size: 0.9rem;
+            color: #999;
+            font-weight: 300;
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .skill {
+            padding: 0.5rem 1rem;
+            background: #111;
+            border: 1px solid #222;
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        .contact {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .contact a {
+            color: #888;
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .contact a:hover {
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Theo Butters</h1>
+            <p class="subtitle">Amateur Developer & Designer</p>
+        </header>
+
+        <section>
+            <h2>About Me</h2>
+            <p style="color: #999; font-weight: 300; line-height: 1.8;">
+                Hi, my name's Theo.<br>
+                Ever since I was little I had wanted to do programming and over the past few years I've been following through with my dream.
+                I haven't produced much finished results, however, I have certainly gained a lot of experience over the time.<br>
+                I hope I haven't bored you already.
+            </p>
+        </section>
+
+        <section>
+            <h2>Projects</h2>
+            <a href="/barry" class="project">
+                <h3>Barry</h3>
+                <p>A Discord games & chat bot with an integrated LLM.</p>
+            </a>
+            <a href="/blender" class="project">
+                <h3>Blender Designs</h3>
+                <p>Completely self taught, mostly random stuff.</p>
+            </a>
+            <a href="/figma" class="project">
+                <h3>Figma Designs</h3>
+                <p>Again, mostly random stuff.</p>
+            </a>
+            <a href="/uncategorised" class="project">
+                <h3>Uncategorised</h3>
+                <p>From random experiments to small projects.</p>
+            </a>
+        </section>
+
+        <section>
+            <h2>Skills</h2>
+            <div class="skills">
+                <span class="skill">python</span>
+                <span class="skill">discord.py</span>
+                <span class="skill">some css</span>
+                <span class="skill">some html</span>
+                <span class="skill">blender</span>
+                <span class="skill">figma</span>
+            </div>
+        </section>
+
+        <section>
+            <h2>Additional Note</h2>
+            <p style="color: #999; font-weight: 300; line-height: 1.8;">
+                I made this site with extensive help from youtube and numerous forums.<br>
+                I am not an experienced web developer, so please excuse any poor design choices or mistakes.
+            </p>
+        </section>
+
+        <section>
+            <h2>Contact</h2>
+            <div class="contact">
+                <a href="mailto:theobutters21@gmail.com">Email 1</a>
+                <a href="mailto:theobutters12@gmail.com">Email 2</a>
+                <a href="https://github.com/theobutters" target="_blank">GitHub</a>
+                <a href="https://linkedin.com/in/theo-butters/" target="_blank">LinkedIn</a>
+		<p style="color:#888">@figure.one on Discord</p>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
