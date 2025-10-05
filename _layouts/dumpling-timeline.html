@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uncategorised</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Red Hat Mono', monospace;
+            background: #000;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            display: inline-block;
+            color: #888;
+            text-decoration: none;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            background: rgba(10, 10, 10, 0.9);
+            padding: 0.5rem 1rem;
+            border: 1px solid #222;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-link:hover {
+            color: #fff;
+            border-color: #444;
+            transform: translateX(0.5rem);
+        }
+
+        header {
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            padding-top: 2rem;
+            border-bottom: 1px solid #222;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .description {
+            font-size: 1rem;
+            color: #999;
+            font-weight: 300;
+            line-height: 1.8;
+            margin-bottom: 3rem;
+        }
+
+        .gallery {
+            margin-bottom: 3rem;
+        }
+
+        .gallery-main {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: #111;
+            border: 1px solid #222;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .gallery-main img,
+        .gallery-main video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .gallery-main img.active,
+        .gallery-main video.active {
+            display: block;
+        }
+
+        .gallery-controls {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 1rem;
+            pointer-events: none;
+        }
+
+        .gallery-btn {
+            background: rgba(17, 17, 17, 0.8);
+            border: 1px solid #222;
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            pointer-events: all;
+            font-family: 'Red Hat Mono', monospace;
+        }
+
+        .gallery-btn:hover {
+            border-color: #666;
+            background: rgba(17, 17, 17, 0.95);
+        }
+
+        .gallery-btn:first-child:hover {
+            transform: translateX(-0.5rem);
+        }
+
+        .gallery-btn:last-child:hover {
+            transform: translateX(0.5rem);
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(17, 17, 17, 0.8);
+            border: 1px solid #222;
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Red Hat Mono', monospace;
+            z-index: 10;
+        }
+
+        .fullscreen-btn:hover {
+            border-color: #666;
+            background: rgba(17, 17, 17, 0.95);
+            transform: scale(1.1);
+        }
+
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-overlay.active {
+            display: flex;
+        }
+
+        .fullscreen-content {
+            max-width: 95vw;
+            max-height: 95vh;
+            position: relative;
+        }
+
+        .fullscreen-content img,
+        .fullscreen-content video {
+            max-width: 100%;
+            max-height: 95vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border: 1px solid #222;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(17, 17, 17, 0.8);
+            border: 1px solid #222;
+            color: #e0e0e0;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            font-family: 'Red Hat Mono', monospace;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-close:hover {
+            border-color: #666;
+            background: rgba(17, 17, 17, 0.95);
+            transform: rotate(90deg);
+        }
+
+        .fullscreen-controls {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2rem;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .fullscreen-nav-btn {
+            background: rgba(17, 17, 17, 0.8);
+            border: 1px solid #222;
+            color: #e0e0e0;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            pointer-events: all;
+            font-family: 'Red Hat Mono', monospace;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-nav-btn:hover {
+            border-color: #666;
+            background: rgba(17, 17, 17, 0.95);
+        }
+
+        .fullscreen-nav-btn:first-child:hover {
+            transform: translateX(-0.5rem);
+        }
+
+        .fullscreen-nav-btn:last-child:hover {
+            transform: translateX(0.5rem);
+        }
+
+        .fullscreen-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .fullscreen-nav-btn:disabled:hover {
+            transform: none;
+            border-color: #222;
+        }
+
+        .gallery-thumbnails {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .gallery-thumbnails::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .gallery-thumbnails::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        .gallery-thumbnails::-webkit-scrollbar-thumb {
+            background: #222;
+        }
+
+        .thumbnail {
+            min-width: 120px;
+            width: 120px;
+            height: 80px;
+            background: #111;
+            border: 1px solid #222;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .thumbnail:hover {
+            border-color: #444;
+        }
+
+        .thumbnail.active {
+            border-color: #666;
+        }
+
+        .thumbnail img,
+        .thumbnail video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail::after {
+            content: '▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 1.2rem;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .thumbnail[data-type="video"]::after {
+            opacity: 0.8;
+        }
+
+        .post {
+            margin-bottom: 3rem;
+        }
+
+        .post h2 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .post-content {
+            font-size: 0.95rem;
+            color: #999;
+            font-weight: 300;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .back-link {
+                top: 1rem;
+                left: 1rem;
+                font-size: 0.9rem;
+                padding: 0.4rem 0.8rem;
+            }
+
+            .gallery-main {
+                aspect-ratio: 4 / 3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dumpling" class="back-link">← Back to Main Page</a>
+
+        <header>
+            <h1>Timeline</h1>
+        </header>
+
+        <p class="description">
+            The history of our server on a timeline.
+        </p>
+    </div>
+
+    <div class="fullscreen-overlay" onclick="closeFullscreen(event)">
+        <button class="fullscreen-close" onclick="closeFullscreen(event)">×</button>
+        <div class="fullscreen-controls">
+            <button class="fullscreen-nav-btn" onclick="changeFullscreenImage(-1)">‹</button>
+            <button class="fullscreen-nav-btn" onclick="changeFullscreenImage(1)">›</button>
+        </div>
+        <div class="fullscreen-content"></div>
+    </div>
+
+    <script>
+    let currentGallery = null;
+    let currentFullscreenIndex = 0;
+
+    function openFullscreen(btn) {
+        currentGallery = btn.closest('.gallery');
+        const gallery = btn.closest('.gallery-main');
+        const activeMedia = gallery.querySelector('img.active, video.active');
+        const allMedia = gallery.querySelectorAll('img, video');
+        
+        currentFullscreenIndex = Array.from(allMedia).indexOf(activeMedia);
+        
+        showFullscreenMedia(currentFullscreenIndex);
+        
+        const overlay = document.querySelector('.fullscreen-overlay');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        updateFullscreenButtons();
+    }
+
+    function showFullscreenMedia(index) {
+        const gallery = currentGallery.querySelector('.gallery-main');
+        const allMedia = gallery.querySelectorAll('img, video');
+        const media = allMedia[index];
+        
+        const overlay = document.querySelector('.fullscreen-overlay');
+        const content = overlay.querySelector('.fullscreen-content');
+        
+        content.innerHTML = '';
+        
+        if (media.tagName === 'VIDEO') {
+            const video = document.createElement('video');
+            video.src = media.src;
+            video.controls = true;
+            video.autoplay = true;
+            video.loop = true;
+            content.appendChild(video);
+        } else {
+            const img = document.createElement('img');
+            img.src = media.src;
+            img.alt = media.alt;
+            content.appendChild(img);
+        }
+        
+        currentFullscreenIndex = index;
+    }
+
+    function changeFullscreenImage(direction) {
+        const gallery = currentGallery.querySelector('.gallery-main');
+        const allMedia = gallery.querySelectorAll('img, video');
+        
+        currentFullscreenIndex = (currentFullscreenIndex + direction + allMedia.length) % allMedia.length;
+        showFullscreenMedia(currentFullscreenIndex);
+        updateFullscreenButtons();
+    }
+
+    function updateFullscreenButtons() {
+        const gallery = currentGallery.querySelector('.gallery-main');
+        const allMedia = gallery.querySelectorAll('img, video');
+        const buttons = document.querySelectorAll('.fullscreen-nav-btn');
+        
+        if (allMedia.length <= 1) {
+            buttons.forEach(btn => btn.style.display = 'none');
+        } else {
+            buttons.forEach(btn => btn.style.display = 'block');
+        }
+    }
+
+    function closeFullscreen(e) {
+        if (e.target.classList.contains('fullscreen-overlay') || 
+            e.target.classList.contains('fullscreen-close') ||
+            e.target.textContent === '×') {
+            const overlay = document.querySelector('.fullscreen-overlay');
+            const content = overlay.querySelector('.fullscreen-content');
+            const video = content.querySelector('video');
+            
+            if (video) {
+                video.pause();
+            }
+            
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            setTimeout(() => {
+                content.innerHTML = '';
+            }, 300);
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        const overlay = document.querySelector('.fullscreen-overlay');
+        if (overlay.classList.contains('active')) {
+            if (e.key === 'Escape') {
+                closeFullscreen({ target: overlay });
+            } else if (e.key === 'ArrowLeft') {
+                changeFullscreenImage(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeFullscreenImage(1);
+            }
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.gallery').forEach(gallery => {
+        let currentIndex = 0;
+        const media = gallery.querySelectorAll('.gallery-main img, .gallery-main video');
+        const thumbnails = gallery.querySelectorAll('.thumbnail');
+
+        function showImage(index) {
+        media.forEach(item => {
+            if (item.tagName === 'VIDEO') {
+            item.pause();
+            item.currentTime = 0;
+            }
+            item.classList.remove('active');
+        });
+        thumbnails.forEach(thumb => thumb.classList.remove('active'));
+
+        media[index].classList.add('active');
+        thumbnails[index].classList.add('active');
+
+        if (media[index].tagName === 'VIDEO') {
+            media[index].play();
+        }
+
+        currentIndex = index;
+        }
+
+        function changeImage(direction) {
+        currentIndex = (currentIndex + direction + media.length) % media.length;
+        showImage(currentIndex);
+        }
+
+        gallery.querySelectorAll('.gallery-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            const dir = e.target.textContent.includes('‹') ? -1 : 1;
+            changeImage(dir);
+        });
+        });
+
+        thumbnails.forEach((thumb, i) => {
+        thumb.addEventListener('click', () => showImage(i));
+        });
+
+        if (media[0] && media[0].tagName === 'VIDEO') {
+        media[0].play();
+        }
+    });
+    });
+    </script>
+
+</body>
+</html>
