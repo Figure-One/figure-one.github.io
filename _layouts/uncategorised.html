@@ -381,12 +381,22 @@
         </p>
 
         <div class="post">
-            <h2>Butter Encrypter</h2>
+            <h2>Nigma Code Encrypter</h2>
+
+            <div class="post-content">
+                <p>
+                    Created an encrypter and decrypter using a mix of caesar cypher and a custom character swap.
+                    When encrypting, a random key is generated and the inputted text is shifted via caesar cypher by that key.
+                    The text is then prefixed with the key so it can be used during decryption.
+                    Then, each character, including the key, is swapped with another character based on a predefined mapping.
+                    This mapping uses characters from the cyrillic, greek, and arabic scripts.
+                </p>
+            </div>
             
             <div class="gallery">
                 <div class="gallery-main">
-                    <img src="\assets\Uncategorised\Butter Encrypter\Encryption.png" alt="Encryption" class="active">
-                    <img src="\assets\Uncategorised\Butter Encrypter\Decryption.png" alt="Decryption">
+                    <img src="\assets\Uncategorised\Nigma\Encryption.png" alt="Encryption" class="active">
+                    <img src="\assets\Uncategorised\Nigma\Decryption.png" alt="Decryption">
 
                     <div class="gallery-controls">
                         <button class="gallery-btn" onclick="changeImage(-1)">‹</button>
@@ -398,23 +408,12 @@
 
                 <div class="gallery-thumbnails">
                     <div class="thumbnail active" data-type="image" onclick="showImage(0)">
-                        <img src="\assets\Uncategorised\Butter Encrypter\Encryption.png">
+                        <img src="\assets\Uncategorised\Nigma\Encryption.png">
                     </div>
                     <div class="thumbnail" data-type="image" onclick="showImage(1)">
-                        <img src="\assets\Uncategorised\Butter Encrypter\Decryption.png">
+                        <img src="\assets\Uncategorised\Nigma\Decryption.png">
                     </div>
                 </div>
-            </div>
-
-            <div class="post-content">
-                <p>
-                    Created an encrypter and decrypter using a mix of caesar cypher and a custom character swap.
-                    When encrypting, a random key is generated and the inputted text is shifted via caesar cypher by that key.
-                    The text is then prefixed with the key so it can be used during decryption.
-                    Then, each character, including the key, is swapped with another character based on a predefined mapping.
-                    This mapping uses characters from the cyrillic, greek, and arabic scripts.
-                    You can find the code for this <a style="color: #999;" href="https://github.com/theobutters/butter-encrypter">here</a>.
-                </p>
             </div>
         </div>
 
