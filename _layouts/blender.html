@@ -381,6 +381,48 @@
         </p>
 
         <div class="post">
+            <h2>Hotel Corridor Mini-Project</h2>
+
+            <div class="post-content">
+                <p>
+                    Putting what I've learned to the test and ended up with this.
+                    Most materials are from blenderkit, images in picture frames were made in figma, everything else is done by me.
+                    (You can find the custom images in the "assets/hotel corridor/" folder of this repository)<br>
+                </p>
+            </div>
+            
+            <div class="gallery">
+                <div class="gallery-main">
+                    <img src="\assets\Blender\hotel corridor\glasses corridor wireframe.png" alt="Wireframe Mesh" class="active">
+                    <img src="\assets\Blender\hotel corridor\glasses corridor mesh.png" alt="Solid Mesh">
+                    <img src="\assets\Blender\hotel corridor\frame 0600.png" alt="Final Render Frame 0600">
+                    <video src="\assets\Blender\hotel corridor\Final.mp4" alt="Final Rendered Animation" muted loop></video>
+
+                    <div class="gallery-controls">
+                        <button class="gallery-btn" onclick="changeImage(-1)">‹</button>
+                        <button class="gallery-btn" onclick="changeImage(1)">›</button>
+                    </div>
+                    <button class="fullscreen-btn" onclick="openFullscreen(this)">⛶</button>
+                </div>
+
+                <div class="gallery-thumbnails">
+                    <div class="thumbnail active" data-type="image" onclick="showImage(0)">
+                        <img src="\assets\Blender\glasses corridor\hotel corridor wireframe.png">
+                    </div>
+                    <div class="thumbnail" data-type="image" onclick="showImage(1)">
+                        <img src="\assets\Blender\glasses corridor\hotel corridor mesh.png">
+                    </div>
+                    <div class="thumbnail" data-type="image" onclick="showImage(2)">
+                        <img src="\assets\Blender\hotel corridor\frame 0600.png">
+                    </div>
+                    <div class="thumbnail" data-type="video" onclick="showImage(3)">
+                        <video src="\assets\Blender\hotel corridor\Final.mp4" muted></video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="post">
             <h2>Lighting + DoF Testing</h2>
 
             <div class="post-content">
@@ -674,3 +716,4 @@
 
 </body>
 </html>
+
