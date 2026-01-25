@@ -1,20 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PO Branch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="stylesheets/phi-omega.css">
 </head>
 <body>
-    <h1>Phi and Omega Functions</h1>
-    <p>The phi (φ) and omega (ω) functions are mathematical functions often used in number theory.</p>
+  <div class="intro-section" id="introSection">
+    <div class="center-logo" id="centerLogo">
+        <img src="assets/phi-omega/PO-U.png" alt="Phi Omega Logo Unlocking">
+    </div>
 
-    <h2>Phi Function (φ)</h2>
-    <p>The phi function, also known as Euler's totient function, counts the number of integers up to a given integer n that are relatively prime to n. It is denoted as φ(n).</p>
-    <p>For example, φ(9) = 6 because the integers 1, 2, 4, 5, 7, and 8 are all relatively prime to 9.</p>
+    <!-- cba to animate yet, will leave it as a still image for now -->
+    <div class="typing-text" id="typingText">
+      <img src="assets/phi-omega/PO-Title.svg" alt="Phi Omega Project Title">
+    </div>
+  </div>
 
-    <h2>Omega Function (ω)</h2>
-    <p>The omega function counts the number of distinct prime factors of a given integer n. It is denoted as ω(n).</p>
-    <p>For example, ω(18) = 2 because the prime factors of 18 are 2 and 3.</p>
+  <header class="header" id="header">
+    <div class="looping-logo" id="loopingLogo">
+        <img src="assets/phi-omega/PO-S.png" alt="Phi Omega Logo Spinning">
+    </div>
+
+    <div class="banner-text" id="bannerText">
+      <img src="assets/phi-omega/PO-Banner.svg" alt="Phi Omega Project Banner Title">
+    </div>
+  </header>
+
+  <div class="main-content" id="mainContent">
+    <h1>some sorta interesting header ig</h1>
+    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro perspiciatis asperiores dignissimos recusandae similique quam voluptatem nostrum. Optio sequi, eum commodi delectus architecto totam nobis maxime excepturi dolorum odio tempore.</p>
+  </div>
+
+  <script>
+    const centerLogo = document.getElementById('centerLogo');
+    const typingText = document.getElementById('typingText');
+    const introSection = document.getElementById('introSection');
+    const header = document.getElementById('header');
+    const bannerText = document.getElementById('bannerText');
+    const mainContent = document.getElementById('mainContent');
+
+    setTimeout(() => {
+      centerLogo.classList.add('faded');
+    }, 2500);
+
+    setTimeout(() => {
+      typingText.classList.add('visible');
+    }, 3000);
+
+    setTimeout(() => {
+      typingText.classList.add('fadeout');
+    }, 6000);
+
+    setTimeout(() => {
+      centerLogo.classList.remove('faded');
+      centerLogo.classList.add('moved');
+      header.classList.add('visible');
+    }, 7000);
+
+    setTimeout(() => {
+      bannerText.classList.add('visible');
+    }, 8100);
+
+    setTimeout(() => {
+      centerLogo.classList.add('hidden');
+      document.getElementById('loopingLogo').style.opacity = '1';
+    }, 8500);
+
+    setTimeout(() => {
+      mainContent.classList.add('visible');
+      introSection.classList.add('finished');
+    }, 9000);
+  </script>
 </body>
 </html>
