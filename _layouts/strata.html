@@ -6,7 +6,7 @@ layout: null
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>STRATA OS — Foundation Computing Environment</title>
+  <title>STRATA OS</title>
   <meta name="robots" content="noindex,nofollow"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -51,7 +51,7 @@ layout: null
 <!-- ── Boot screen ── -->
 <div id="boot-screen">
   <div class="boot-logo">STRA<span>TA</span></div>
-  <div class="boot-tagline">FOUNDATION HARDENED COMPUTING ENVIRONMENT</div>
+  <div class="boot-tagline">FOUNDATION HARDENED ENVIRONMENT</div>
   <div class="boot-progress">
     <div class="boot-progress-fill" id="boot-fill"></div>
   </div>
@@ -200,12 +200,12 @@ layout: null
   // Fix: Terminal module needs setOutput/setInput/setPrompt as real setters
   // These are called in apps.js buildTerminalApp for the in-desktop terminal
   // We patch them here since the module uses closures
-  Terminal.setOutput = function(el) {
+  //Terminal.setOutput = function(el) {
     // Access module internals via a dedicated channel
-    Terminal._pendingOutput = el;
-  };
-  Terminal.setInput  = function(el) { Terminal._pendingInput  = el; };
-  Terminal.setPrompt = function(el) { Terminal._pendingPrompt = el; };
+    //Terminal._pendingOutput = el;
+  //};
+  //Terminal.setInput  = function(el) { Terminal._pendingInput  = el; };
+  //Terminal.setPrompt = function(el) { Terminal._pendingPrompt = el; };
 </script>
 
 </body>

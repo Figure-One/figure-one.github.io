@@ -19,7 +19,11 @@ const Apps = (() => {
 
     // Init a secondary terminal instance using same Terminal module
     // We temporarily swap output/input pointers for this window
-    const savedOut    = Terminal.setOutput ? null : null;
+    // Save original boot terminal elements before swapping
+    const prevOut    = document.getElementById('terminal-output');
+    const prevIn     = document.getElementById('terminal-input');
+    const prevPrompt = document.getElementById('terminal-prompt');
+
     Terminal.setOutput(outEl);
     Terminal.setInput(inEl);
     Terminal.setPrompt(prEl);
@@ -34,6 +38,18 @@ const Apps = (() => {
     outEl.addEventListener('click', () => inEl.focus());
     container.addEventListener('click', () => inEl.focus());
 
+    // Restore boot terminal when this window is closed
+    const observer = new MutationObserver(() => {
+      if (!document.contains(container)) {
+        Terminal.setOutput(prevOut);
+        Terminal.setInput(prevIn);
+        Terminal.setPrompt(prevPrompt);
+        Terminal.updatePrompt();
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
     // Note: this terminal shares the Terminal module state
     // When window closes the boot terminal stays intact
   }
@@ -44,6 +60,7 @@ const Apps = (() => {
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
     container.style.height = '100%';
+    container.style.overflow = 'hidden';
 
     const user = Auth.getUser();
     container.innerHTML = `
@@ -60,6 +77,7 @@ const Apps = (() => {
           class="app-iframe"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
           onerror="scipnetFallback()"
+          style="flex:1; height:100%; width:100%; border:none; display:block;"
         ></iframe>
         <div id="scipnet-fallback" class="hidden" style="
           position:absolute;inset:0;display:flex;flex-direction:column;
@@ -103,7 +121,7 @@ const Apps = (() => {
 
   function buildBrowser(container) {
     const user = Auth.getUser();
-    const canBrowse = Auth.hasClearance(2) || Auth.hasScope('ARCHIVE') || Auth.hasScope('SRREASEARCH');
+    const canBrowse = Auth.hasClearance(2) || Auth.hasScope('ARCHIVE') || Auth.hasScope('SRRESEARCH');
 
     if (!canBrowse) {
       container.innerHTML = `

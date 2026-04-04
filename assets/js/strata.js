@@ -9,20 +9,20 @@ const StrataOS = (() => {
   // ── Init ───────────────────────────────────────────────────────────────
 
   async function init() {
-    // Start in dark mode
     document.body.classList.add('dark-mode');
 
-    // Load data from embedded JSON (injected by Jekyll into page)
     _users = window.STRATA_USERS || [];
     _sites = window.STRATA_SITES || [];
 
-    // Start clock
-    startStatusClock();
+    // Add this guard so you get a visible error instead of silent failure:
+    if (_users.length === 0) {
+      console.error('STRATA: No users found in window.STRATA_USERS. Check Jekyll _data/users.yml and that the page has front matter (--- ---) so Jekyll processes the template.');
+    }
 
-    // Boot screen → terminal
+    startStatusClock();
     await runBootScreen();
     showTerminal();
-    Terminal.init('terminal-output','terminal-input','terminal-prompt');
+    Terminal.init('terminal-output', 'terminal-input', 'terminal-prompt');
     Terminal.runBoot();
   }
 

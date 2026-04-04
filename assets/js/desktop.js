@@ -18,6 +18,8 @@ const Desktop = (() => {
     const desktopView  = document.getElementById('desktop-view');
     terminalView.style.display = 'none';
     desktopView.style.display  = 'flex';
+    document.getElementById('status-bar').style.display = 'none';
+    document.querySelectorAll('.corner-deco, .accent-line').forEach(el => el.style.display = 'none');
 
     buildCircuitLines();
     startClock();
@@ -169,26 +171,33 @@ const Desktop = (() => {
     if (!windows[id]) return;
     const w = windows[id];
     if (w.maximised) {
-      // Restore
       w.el.style.left   = w.origX + 'px';
       w.el.style.top    = w.origY + 'px';
       w.el.style.width  = w.origW + 'px';
       w.el.style.height = w.origH + 'px';
       w.maximised = false;
+      // Restore dock if no other windows are maximised
+      const anyMaximised = Object.values(windows).some(w => w.maximised);
+      if (!anyMaximised) {
+        const dock = document.getElementById('dock');
+        const dockTrigger = document.getElementById('dock-trigger');
+        dock.classList.remove('dock-hidden');
+        dockTrigger.classList.remove('active');
+      }
     } else {
-      // Save and maximise
       w.origX = parseInt(w.el.style.left);
       w.origY = parseInt(w.el.style.top);
       w.origW = parseInt(w.el.style.width);
       w.origH = parseInt(w.el.style.height);
       w.el.style.left   = '0px';
-      w.el.style.top    = '0px';
+      w.el.style.top    = '44px';
       w.el.style.width  = '100%';
-      w.el.style.height = '100%';
+      w.el.style.height = 'calc(100% - 44px)';
       w.maximised = true;
+      hideDockForMaximise();
     }
   }
-
+  
   function toggleWindow(id) {
     if (!windows[id]) return;
     if (windows[id].minimised) restoreWindow(id);
@@ -209,11 +218,11 @@ const Desktop = (() => {
     function onDown(e) {
       if (e.target.classList.contains('win-btn')) return;
       dragging = true;
-      const rect = win.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       startX = clientX; startY = clientY;
-      startL = rect.left; startT = rect.top;
+      startL = parseInt(win.style.left) || 0;
+      startT = parseInt(win.style.top)  || 0;
       e.preventDefault();
     }
     function onMove(e) {
@@ -221,7 +230,7 @@ const Desktop = (() => {
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       win.style.left = (startL + clientX - startX) + 'px';
-      win.style.top  = Math.max(0, startT + clientY - startY) + 'px';
+      win.style.top  = Math.max(44, startT + clientY - startY) + 'px';
     }
     function onUp() { dragging = false; }
 
@@ -250,6 +259,46 @@ const Desktop = (() => {
     });
     document.addEventListener('mouseup', () => { resizing = false; });
   }
+
+  // Dock hide/show — only triggered by maximise, hover to restore
+  const dockTrigger = document.createElement('div');
+  dockTrigger.id = 'dock-trigger';
+  document.body.appendChild(dockTrigger);
+
+  const dock = document.getElementById('dock');
+  let dockHideTimer = null;
+
+  function hideDockForMaximise() {
+    dock.classList.add('dock-hidden');
+    dockTrigger.classList.add('active');
+  }
+
+  function showDockFromTrigger() {
+    clearTimeout(dockHideTimer);
+    dock.classList.remove('dock-hidden');
+  }
+
+  function scheduleDockRehide() {
+    clearTimeout(dockHideTimer);
+    dockHideTimer = setTimeout(() => {
+      // Only re-hide if a window is still maximised
+      const anyMaximised = Object.values(windows).some(w => w.maximised);
+      if (anyMaximised) {
+        dock.classList.add('dock-hidden');
+      } else {
+        dockTrigger.classList.remove('active');
+      }
+    }, 1500);
+  }
+
+  dockTrigger.addEventListener('mouseenter', showDockFromTrigger);
+  dock.addEventListener('mouseleave', scheduleDockRehide);
+  dock.addEventListener('mouseenter', () => clearTimeout(dockHideTimer));
+
+  // Expose so maximiseWindow can call it
+  Desktop._hideDockForMaximise = hideDockForMaximise;
+  Desktop._showDock = showDockFromTrigger;
+
 
   // ── App launchers (called from dock/desktop icons) ──────────────────────
 

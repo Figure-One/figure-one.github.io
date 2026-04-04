@@ -89,7 +89,7 @@ const Terminal = (() => {
     clear();
 
     const lines = [
-      { text: 'STRATA OS v4.2.1 — FOUNDATION HARDENED COMPUTING ENVIRONMENT', cls: 't-header', delay: 0 },
+      { text: 'STRATA OS v4.2.1 — FOUNDATION HARDENED ENVIRONMENT', cls: 't-header', delay: 0 },
       { text: '─'.repeat(60), cls: 't-divider', delay: 60 },
       { text: 'Copyright © The Foundation. All rights reserved.', cls: 't-muted', delay: 40 },
       { text: 'Unauthorised access constitutes a Class-IV breach.', cls: 't-muted', delay: 30 },
@@ -158,8 +158,15 @@ const Terminal = (() => {
 
   function triggerCardLogin() {
     const users = StrataOS.getUsers();
+    if (!users || users.length === 0) {
+      printLine('[ ERROR: No user accounts found — check STRATA_USERS data ]', 't-error');
+      printLine('[ Ensure Jekyll is processing this page and _data/users.yml exists ]', 't-warn');
+      return;
+    }
     printLine('Awaiting keycard presentation…', 't-system', 200).then(() => {
-      Auth.showCardModal(users, user => onLoginComplete(user));
+      setTimeout(() => {
+        Auth.showCardModal(users, user => onLoginComplete(user));
+      }, 3500);
     });
   }
 
@@ -570,7 +577,7 @@ const Terminal = (() => {
 
   function cmdVersion() {
     printLine('STRATA OS v4.2.1 (build 20240901-HARDENED)', 't-system');
-    printLine('Foundation Hardened Computing Environment', 't-muted');
+    printLine('Foundation Hardened Environment', 't-muted');
     printLine('Kernel: STRATA-K 2.7.4  |  Bedrock: 1.0.0-IMMUTABLE', 't-muted');
   }
 
@@ -702,7 +709,7 @@ const Terminal = (() => {
     printLine(`  Locale        : ${navigator.language}`, 't-value');
     printLine(`  Online        : ${navigator.onLine ? 'YES' : 'NO'}`, 't-value');
     printLine(`  Cores         : ${navigator.hardwareConcurrency || '?'}`, 't-value');
-    printLine(`  Memory        : ${(navigator as any).deviceMemory ? (navigator as any).deviceMemory + ' GB' : 'CLASSIFIED'}`, 't-value');
+    printLine(`  Memory        : ${navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'CLASSIFIED'}`, 't-value');
   }
 
   function cmdPs() {
@@ -827,7 +834,7 @@ const Terminal = (() => {
       printLine(`  Proxy requests (session) : ${Math.floor(Math.random()*20)+2}`, 't-value');
       printLine(`  Commands issued          : ${history.length}`, 't-value');
       printLine(`  Auth events              : 1 login`, 't-value');
-      printLine(`  Failed auth attempts     : ${(Auth as any)._attempts?.length ?? 0}`, 't-value');
+      printLine(`  Failed auth attempts     : ${Auth._attempts?.length ?? 0}`, 't-value');
       printLine(`  Memory delta (session)   : +${Math.floor(Math.random()*12)+2} MB`, 't-value');
       printLine(`  Network I/O              : ${Math.floor(Math.random()*400)+100} KB`, 't-value');
     });

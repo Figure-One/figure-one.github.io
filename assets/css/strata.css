@@ -74,12 +74,26 @@ html, body {
     linear-gradient(var(--grid-color) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 40px 40px;
-  animation: gridDrift 60s linear infinite;
+  animation: gridDrift 18s linear infinite, gridFlicker 8s step-end infinite;
 }
 
 @keyframes gridDrift {
   0% { background-position: 0 0, 0 0; }
   100% { background-position: 0 40px, 40px 0; }
+}
+
+
+@keyframes gridFlicker {
+  0%   { opacity: 1; }
+  72%  { opacity: 1; }
+  73%  { opacity: 0.1; }
+  74%  { opacity: 1; }
+  75%  { opacity: 0.3; }
+  76%  { opacity: 1; }
+  91%  { opacity: 1; }
+  92%  { opacity: 0.05; }
+  93%  { opacity: 1; }
+  100% { opacity: 1; }
 }
 
 /* === SCANLINES === */
@@ -104,8 +118,8 @@ html, body {
 }
 .corner-deco::before { width: 100%; height: 2px; top: 0; left: 0; }
 .corner-deco::after  { width: 2px; height: 100%; top: 0; left: 0; }
-.corner-deco.tl { top: 12px; left: 12px; }
-.corner-deco.tr { top: 12px; right: 12px; transform: scaleX(-1); }
+.corner-deco.tl { top: 40px; left: 12px; }
+.corner-deco.tr { top: 40px; right: 12px; transform: scaleX(-1); }
 .corner-deco.bl { bottom: 12px; left: 12px; transform: scaleY(-1); }
 .corner-deco.br { bottom: 12px; right: 12px; transform: scale(-1); }
 
@@ -423,7 +437,7 @@ html, body {
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 2px 20px rgba(0,200,255,0.05);
-  margin-top: 28px;
+  margin-top: 0;
 }
 .topbar-left { display: flex; align-items: center; gap: 16px; }
 .topbar-logo {
@@ -454,13 +468,26 @@ html, body {
 
 /* Dock */
 #dock {
-  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
   z-index: 20;
   display: flex; align-items: flex-end; gap: 8px;
   padding: 10px 16px;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   box-shadow: var(--panel-shadow), var(--accent-glow);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+  opacity: 1;
+}
+#dock.dock-hidden {
+  transform: translateX(-50%) translateY(calc(100% + 20px));
+  opacity: 0;
+}
+#dock-trigger {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 20px;
+  z-index: 19; pointer-events: none;
+}
+#dock-trigger.active {
+  pointer-events: all;
 }
 
 .dock-item {
@@ -469,7 +496,9 @@ html, body {
   position: relative;
 }
 .dock-item:hover { transform: translateY(-8px); }
-.dock-item:hover .dock-tooltip { opacity: 1; transform: translateY(-4px); }
+.dock-item:hover .dock-tooltip {
+  opacity: 1; transform: translateX(-50%) translateY(-4px);
+}
 
 .dock-icon {
   width: 44px; height: 44px;
@@ -497,7 +526,7 @@ html, body {
   background: var(--accent); box-shadow: var(--accent-glow);
 }
 .dock-tooltip {
-  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%) translateY(0);
+  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%);
   background: var(--bg-panel); border: 1px solid var(--border);
   padding: 3px 8px; white-space: nowrap;
   font-family: var(--font-mono); font-size: 9px; color: var(--accent);
@@ -617,7 +646,7 @@ html, body {
   transition: all var(--transition);
 }
 .browser-go:hover { background: var(--accent); color: #000; }
-.app-iframe { flex: 1; border: none; width: 100%; display: block; }
+.app-iframe { flex: 1; border: none; width: 100%; height: 100%; display: block; min-height: 0; }
 
 /* ============================================================
    APP — TEXT EDITOR

@@ -11,18 +11,26 @@ const Auth = (() => {
 
   // Password logic: track unique attempts per uid
   // First 1-3 unique fail; repeat of known-tried always fails; 4th+ unique succeeds
+// Each uid gets a random threshold of 0-3 failed attempts before success
+  const loginThresholds = {};
+
   function checkPassword(uid, input) {
     if (!loginAttempts[uid]) loginAttempts[uid] = [];
+    if (loginThresholds[uid] === undefined) {
+      loginThresholds[uid] = Math.floor(Math.random() * 4); // 0, 1, 2, or 3
+    }
+
     const attempts = loginAttempts[uid];
     const alreadyTried = attempts.includes(input.trim().toLowerCase());
     if (alreadyTried) return false;
     attempts.push(input.trim().toLowerCase());
-    if (attempts.length <= 3) return false;
-    return true;
+
+    return attempts.length > loginThresholds[uid];
   }
 
   function resetAttempts(uid) {
     loginAttempts[uid] = [];
+    delete loginThresholds[uid];
   }
 
   // Clearance level colours

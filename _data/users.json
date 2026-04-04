@@ -1,7 +1,7 @@
 [
   {
     "uid": "FND-0001",
-    "name": "Dr. Evelyn Shaw",
+    "name": "Evelyn Shaw",
     "title": "Dr.",
     "role": "Senior Researcher",
     "password": "any",
@@ -34,7 +34,7 @@
   },
   {
     "uid": "FND-0004",
-    "name": "Dr. Armand Soleil",
+    "name": "Armand Soleil",
     "title": "Dr.",
     "role": "Junior Researcher",
     "password": "any",
@@ -45,7 +45,7 @@
   },
   {
     "uid": "FND-0005",
-    "name": "Director Vasquez",
+    "name": "Kalu Vasquez",
     "title": "Director",
     "role": "Site Authority",
     "password": "any",
