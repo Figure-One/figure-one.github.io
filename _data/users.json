@@ -1,0 +1,57 @@
+[
+  {
+    "uid": "FND-0001",
+    "name": "Dr. Evelyn Shaw",
+    "title": "Dr.",
+    "role": "Senior Researcher",
+    "password": "any",
+    "passphrase": "any",
+    "clearance": 3,
+    "scopes": ["ARCHIVE", "SRREASEARCH", "JRRESEARCH"],
+    "tethered_site": null
+  },
+  {
+    "uid": "FND-0002",
+    "name": "Marcus Holt",
+    "title": "Agent",
+    "role": "Site Security",
+    "password": "any",
+    "passphrase": "any",
+    "clearance": 2,
+    "scopes": ["SECURITY"],
+    "tethered_site": null
+  },
+  {
+    "uid": "FND-0003",
+    "name": "Yuki Tanaka",
+    "title": "Technician",
+    "role": "IT Technician",
+    "password": "any",
+    "passphrase": "any",
+    "clearance": 2,
+    "scopes": ["NETTECH", "ENGINEER"],
+    "tethered_site": null
+  },
+  {
+    "uid": "FND-0004",
+    "name": "Dr. Armand Soleil",
+    "title": "Dr.",
+    "role": "Junior Researcher",
+    "password": "any",
+    "passphrase": "any",
+    "clearance": 1,
+    "scopes": ["JRRESEARCH"],
+    "tethered_site": null
+  },
+  {
+    "uid": "FND-0005",
+    "name": "Director Vasquez",
+    "title": "Director",
+    "role": "Site Authority",
+    "password": "any",
+    "passphrase": "any",
+    "clearance": 4,
+    "scopes": ["SITEAUTHORITY", "ARCHIVE", "SRREASEARCH", "JRRESEARCH", "SECURITY", "NETTECH", "ENGINEER"],
+    "tethered_site": null
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "Site-19",
+    "name": "Site-19",
+    "description": "General Containment Facility",
+    "lat": 40.7128,
+    "lon": -74.0060,
+    "region": "North America"
+  },
+  {
+    "id": "Site-17",
+    "name": "Site-17",
+    "description": "Humanoid Containment & Research",
+    "lat": 48.8566,
+    "lon": 2.3522,
+    "region": "Western Europe"
+  },
+  {
+    "id": "Site-28",
+    "name": "Site-28",
+    "description": "Cognitohazard Research Division",
+    "lat": 51.5074,
+    "lon": -0.1278,
+    "region": "Western Europe"
+  },
+  {
+    "id": "Site-77",
+    "name": "Site-77",
+    "description": "General Storage & Archival",
+    "lat": 41.9028,
+    "lon": 12.4964,
+    "region": "Southern Europe"
+  },
+  {
+    "id": "Site-45",
+    "name": "Site-45",
+    "description": "Research & Development",
+    "lat": -33.8688,
+    "lon": 151.2093,
+    "region": "Pacific"
+  }
+]
