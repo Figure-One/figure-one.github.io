@@ -3,7 +3,7 @@
 const Auth = (() => {
 
   // Session state
-  let currentUser = null;
+  let currentUser = JSON.parse(localStorage.getItem('strata_user') || 'null');
   let loginAttempts = {}; // uid -> array of unique passwords tried
   let loginPhase = 'card'; // 'card' | 'password' | 'passphrase'
   let selectedCard = null;
@@ -203,6 +203,7 @@ const Auth = (() => {
   async function finaliseLogin(user) {
     hideLoginPanel();
     currentUser = { ...user };
+    localStorage.setItem('strata_user', JSON.stringify(currentUser));
     resetAttempts(user.uid);
 
     // Geolocation → nearest site
@@ -252,9 +253,8 @@ const Auth = (() => {
     loginAttempts = {};
     selectedCard = null;
     loginPhase = 'card';
-    // Session storage wipe
     sessionStorage.clear();
-    // Reload page for clean session
+    localStorage.removeItem('strata_user');
     location.reload();
   }
 

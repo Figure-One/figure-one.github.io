@@ -175,6 +175,7 @@ const Terminal = (() => {
     clear();
 
     const cl = Auth.CL_LABELS[user.clearance] || 'UNKNOWN';
+    const deviceType = /Mobi|Android/i.test(navigator.userAgent) ? 'MOBILE' : 'DESKTOP';
     const site = user.tetheredSite
       ? `${user.tetheredSite.name} — ${user.tetheredSite.description}`
       : 'LOCATION UNRESOLVED — SITE ASSIGNMENT PENDING';
@@ -205,7 +206,7 @@ const Terminal = (() => {
     await printLine(`  SCOPES          : ${user.scopes.join(', ')}`, 't-value', 30);
     await printLine(`  TETHERED SITE   : ${site}`, 't-value', 30);
     await printLine(`  SESSION TYPE    : EPHEMERAL (data will not persist)`, 't-value', 30);
-    await printLine(`  TERMINAL        : STRATA-0 / ${navigator.platform || 'UNKNOWN PLATFORM'}`, 't-value', 30);
+    await printLine(`  TERMINAL        : STRATA-0 / ${deviceType}`, 't-value', 30);
     await printBlank(40);
     await printDivider(40);
     await printBlank(30);

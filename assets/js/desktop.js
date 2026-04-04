@@ -8,6 +8,11 @@ const Desktop = (() => {
   let activeWinId = null;
   let clockInterval = null;
 
+  // Dock state — initialised in launch()
+  let dock = null;
+  let dockTrigger = null;
+  let dockHideTimer = null;
+
   // ── Launch desktop ──────────────────────────────────────────────────────
 
   function launch() {
@@ -24,12 +29,51 @@ const Desktop = (() => {
     buildCircuitLines();
     startClock();
     updateTopbarUser();
+    initDock();
 
     // Spawn welcome notification
     setTimeout(() => {
       const user = Auth.getUser();
       StrataOS.showToast(`Welcome, ${user.title} ${user.name}`, 'success');
     }, 500);
+  }
+
+  // ── Dock ────────────────────────────────────────────────────────────────
+
+  function initDock() {
+    dock = document.getElementById('dock');
+
+    dockTrigger = document.createElement('div');
+    dockTrigger.id = 'dock-trigger';
+    document.body.appendChild(dockTrigger);
+
+    dockTrigger.addEventListener('mouseenter', showDock);
+    dock.addEventListener('mouseenter', () => clearTimeout(dockHideTimer));
+    dock.addEventListener('mouseleave', scheduleDockRehide);
+  }
+
+  function hideDockForMaximise() {
+    if (!dock) return;
+    dock.classList.add('dock-hidden');
+    if (dockTrigger) dockTrigger.classList.add('active');
+  }
+
+  function showDock() {
+    if (!dock) return;
+    clearTimeout(dockHideTimer);
+    dock.classList.remove('dock-hidden');
+  }
+
+  function scheduleDockRehide() {
+    clearTimeout(dockHideTimer);
+    dockHideTimer = setTimeout(() => {
+      const anyMaximised = Object.values(windows).some(w => w.maximised);
+      if (anyMaximised) {
+        dock.classList.add('dock-hidden');
+      } else {
+        if (dockTrigger) dockTrigger.classList.remove('active');
+      }
+    }, 1500);
   }
 
   // ── Topbar ──────────────────────────────────────────────────────────────
@@ -90,7 +134,6 @@ const Desktop = (() => {
     win.id = `win-${id}`;
     win.style.zIndex = ++zCounter;
 
-    // Default size/position
     const W = opts.width  || 700;
     const H = opts.height || 480;
     const maxX = Math.max(0, window.innerWidth - W - 40);
@@ -119,15 +162,12 @@ const Desktop = (() => {
     windows[id] = { el: win, minimised: false, maximised: false,
       origX: x, origY: y, origW: W, origH: H };
 
-    // Populate content
     const contentEl = document.getElementById(`wincontent-${id}`);
     contentFn(contentEl);
 
-    // Dragging
     makeDraggable(win, document.getElementById(`titlebar-${id}`));
     makeResizable(win, document.getElementById(`winresize-${id}`));
 
-    // Focus on click
     win.addEventListener('mousedown', () => focusWindow(id));
     win.addEventListener('touchstart', () => focusWindow(id));
 
@@ -152,6 +192,11 @@ const Desktop = (() => {
     delete windows[id];
     updateDockActive(id, false);
     if (activeWinId === id) activeWinId = null;
+    const anyMaximised = Object.values(windows).some(w => w.maximised);
+    if (!anyMaximised) {
+      showDock();
+      if (dockTrigger) dockTrigger.classList.remove('active');
+    }
   }
 
   function minimiseWindow(id) {
@@ -176,13 +221,10 @@ const Desktop = (() => {
       w.el.style.width  = w.origW + 'px';
       w.el.style.height = w.origH + 'px';
       w.maximised = false;
-      // Restore dock if no other windows are maximised
-      const anyMaximised = Object.values(windows).some(w => w.maximised);
+      const anyMaximised = Object.values(windows).some(win => win.maximised);
       if (!anyMaximised) {
-        const dock = document.getElementById('dock');
-        const dockTrigger = document.getElementById('dock-trigger');
-        dock.classList.remove('dock-hidden');
-        dockTrigger.classList.remove('active');
+        showDock();
+        if (dockTrigger) dockTrigger.classList.remove('active');
       }
     } else {
       w.origX = parseInt(w.el.style.left);
@@ -190,24 +232,44 @@ const Desktop = (() => {
       w.origW = parseInt(w.el.style.width);
       w.origH = parseInt(w.el.style.height);
       w.el.style.left   = '0px';
-      w.el.style.top    = '44px';
+      w.el.style.top    = '0px';
       w.el.style.width  = '100%';
-      w.el.style.height = 'calc(100% - 44px)';
+      w.el.style.height = '100%';
       w.maximised = true;
       hideDockForMaximise();
     }
   }
-  
+
   function toggleWindow(id) {
     if (!windows[id]) return;
-    if (windows[id].minimised) restoreWindow(id);
-    else if (activeWinId === id) minimiseWindow(id);
-    else focusWindow(id);
+    if (windows[id].minimised) {
+      restoreWindow(id);
+    } else if (activeWinId === id) {
+      minimiseWindow(id);
+    } else {
+      focusWindow(id);
+    }
   }
 
   function updateDockActive(id, active) {
     const btn = document.querySelector(`[data-app="${id}"]`);
-    if (btn) btn.classList.toggle('active', active);
+    if (!btn) return;
+    btn.classList.toggle('active', active);
+    if (active) {
+      btn.onclick = () => toggleWindow(id);
+    } else {
+      const openers = {
+        terminal: () => Desktop.openTerminal(),
+        scipnet:  () => Desktop.openSCiPnet(),
+        browser:  () => Desktop.openBrowser(),
+        editor:   () => Desktop.openTextEditor(),
+        archive:  () => Desktop.openArchiveWriter(),
+        files:    () => Desktop.openFileExplorer(),
+        media:    () => Desktop.openMediaPlayer(),
+        calc:     () => Desktop.openCalculator(),
+      };
+      if (openers[id]) btn.onclick = openers[id];
+    }
   }
 
   // ── Drag & Resize ───────────────────────────────────────────────────────
@@ -217,6 +279,10 @@ const Desktop = (() => {
 
     function onDown(e) {
       if (e.target.classList.contains('win-btn')) return;
+      const winState = Object.values(windows).find(w => w.el === win);
+      if (winState && winState.maximised) return;
+      const winId = Object.keys(windows).find(k => windows[k].el === win);
+      if (winId) focusWindow(winId);
       dragging = true;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -230,7 +296,7 @@ const Desktop = (() => {
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       win.style.left = (startL + clientX - startX) + 'px';
-      win.style.top  = Math.max(44, startT + clientY - startY) + 'px';
+      win.style.top  = Math.max(0, startT + clientY - startY) + 'px';
     }
     function onUp() { dragging = false; }
 
@@ -260,47 +326,7 @@ const Desktop = (() => {
     document.addEventListener('mouseup', () => { resizing = false; });
   }
 
-  // Dock hide/show — only triggered by maximise, hover to restore
-  const dockTrigger = document.createElement('div');
-  dockTrigger.id = 'dock-trigger';
-  document.body.appendChild(dockTrigger);
-
-  const dock = document.getElementById('dock');
-  let dockHideTimer = null;
-
-  function hideDockForMaximise() {
-    dock.classList.add('dock-hidden');
-    dockTrigger.classList.add('active');
-  }
-
-  function showDockFromTrigger() {
-    clearTimeout(dockHideTimer);
-    dock.classList.remove('dock-hidden');
-  }
-
-  function scheduleDockRehide() {
-    clearTimeout(dockHideTimer);
-    dockHideTimer = setTimeout(() => {
-      // Only re-hide if a window is still maximised
-      const anyMaximised = Object.values(windows).some(w => w.maximised);
-      if (anyMaximised) {
-        dock.classList.add('dock-hidden');
-      } else {
-        dockTrigger.classList.remove('active');
-      }
-    }, 1500);
-  }
-
-  dockTrigger.addEventListener('mouseenter', showDockFromTrigger);
-  dock.addEventListener('mouseleave', scheduleDockRehide);
-  dock.addEventListener('mouseenter', () => clearTimeout(dockHideTimer));
-
-  // Expose so maximiseWindow can call it
-  Desktop._hideDockForMaximise = hideDockForMaximise;
-  Desktop._showDock = showDockFromTrigger;
-
-
-  // ── App launchers (called from dock/desktop icons) ──────────────────────
+  // ── App launchers ───────────────────────────────────────────────────────
 
   function openTerminal() {
     createWindow('terminal', 'STRATA TERMINAL // STRATA-0', el => {
@@ -326,9 +352,15 @@ const Desktop = (() => {
     }, { width: 720, height: 520 });
   }
 
-  function openMediaPlayer() {
+  // openPath: optional fs path to pre-select a media item on open
+  function openMediaPlayer(openPath) {
+    if (windows['media']) {
+      focusWindow('media');
+      if (windows['media'].minimised) restoreWindow('media');
+      return;
+    }
     createWindow('media', 'MEDIA EXPLORER', el => {
-      Apps.buildMediaPlayer(el);
+      Apps.buildMediaPlayer(el, openPath);
     }, { width: 820, height: 520 });
   }
 
@@ -363,10 +395,10 @@ const Desktop = (() => {
     openSCiPnet,
     openBrowser,
     openTextEditor,
-    openMediaPlayer,
+    openArchiveWriter,
     openFileExplorer,
     openCalculator,
-    openArchiveWriter,
+    openMediaPlayer,
   };
 
 })();

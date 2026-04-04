@@ -14,13 +14,19 @@ const StrataOS = (() => {
     _users = window.STRATA_USERS || [];
     _sites = window.STRATA_SITES || [];
 
-    // Add this guard so you get a visible error instead of silent failure:
     if (_users.length === 0) {
       console.error('STRATA: No users found in window.STRATA_USERS. Check Jekyll _data/users.yml and that the page has front matter (--- ---) so Jekyll processes the template.');
     }
 
     startStatusClock();
     await runBootScreen();
+
+    // If a persisted session exists, skip auth and go straight to desktop
+    if (Auth.getUser()) {
+      Desktop.launch();
+      return;
+    }
+
     showTerminal();
     Terminal.init('terminal-output', 'terminal-input', 'terminal-prompt');
     Terminal.runBoot();
