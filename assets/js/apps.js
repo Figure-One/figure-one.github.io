@@ -5,6 +5,31 @@ const Apps = (() => {
   // ── CLIPBOARD (cut/copy/paste across apps) ──────────────────────────────
   let clipboard = null; // { op: 'copy'|'cut', path, name, content }
 
+  // ── BLOB STORE — in-memory store for binary files (images/audio/video) ──
+  // sessionStorage has a ~5 MB quota; base64-encoded media blows past it instantly.
+  // We keep binary file data in a plain Map for the session lifetime instead.
+  const blobStore = new Map(); // path → dataURL string
+
+  function blobGet(path)        { return blobStore.get(path) ?? null; }
+  function blobSet(path, data)  { blobStore.set(path, data); }
+  function blobDelete(path)     { blobStore.delete(path); }
+  function blobList()           { return Array.from(blobStore.entries()); } // [[path, dataURL], …]
+
+  // Unified read: checks blobStore first, then sessionStorage
+  function fileRead(path) {
+    const blob = blobStore.get(path);
+    if (blob !== undefined) return blob;
+    const fs = fsGet();
+    return fs[path] ?? null;
+  }
+
+  // Returns all known paths (both stores, deduplicated)
+  function allPaths() {
+    const fs = fsGet();
+    const set = new Set([...Object.keys(fs), ...blobStore.keys()]);
+    return Array.from(set);
+  }
+
   // ── FILE TYPE DETECTION ─────────────────────────────────────────────────
 
   function fileTypeOf(name) {
@@ -132,50 +157,86 @@ const Apps = (() => {
 
   // ── FILE OPERATIONS ──────────────────────────────────────────────────────
 
-  function fsGet()          { return JSON.parse(sessionStorage.getItem('fs_files') || '{}'); }
-  function fsSet(files)     { sessionStorage.setItem('fs_files', JSON.stringify(files)); }
+  // sessionStorage only holds text files — binary data lives in blobStore
+  function fsGet()      { return JSON.parse(sessionStorage.getItem('fs_files') || '{}'); }
+  function fsSet(files) {
+    try { sessionStorage.setItem('fs_files', JSON.stringify(files)); }
+    catch(e) { /* quota exceeded — binary files must use blobStore instead */ }
+  }
+
+  // Unified read: blob store first, then sessionStorage
+  function fileRead(path) {
+    if (blobStore.has(path)) return blobStore.get(path);
+    return fsGet()[path] ?? null;
+  }
+
+  // All known paths across both stores
+  function allPaths() {
+    const set = new Set([...Object.keys(fsGet()), ...blobStore.keys()]);
+    return Array.from(set);
+  }
 
   function fsRename(oldPath, newName) {
-    const files = fsGet();
-    const dir   = oldPath.replace(/\/[^/]+$/, '');
+    const dir     = oldPath.replace(/\/[^/]+$/, '');
     const newPath = dir + '/' + newName;
-    if (files[newPath] !== undefined) { StrataOS.showToast('A file with that name already exists', 'error'); return false; }
-    files[newPath] = files[oldPath];
-    delete files[oldPath];
-    fsSet(files);
+    if (blobStore.has(newPath) || fsGet()[newPath] !== undefined) {
+      StrataOS.showToast('A file with that name already exists', 'error'); return false;
+    }
+    if (blobStore.has(oldPath)) {
+      blobStore.set(newPath, blobStore.get(oldPath));
+      blobStore.delete(oldPath);
+    } else {
+      const files = fsGet();
+      files[newPath] = files[oldPath];
+      delete files[oldPath];
+      fsSet(files);
+    }
     return newPath;
   }
 
   function fsDelete(path) {
+    blobStore.delete(path);
     const files = fsGet();
     delete files[path];
     fsSet(files);
   }
 
   function fsMove(srcPath, destDir) {
-    const files   = fsGet();
-    const name    = srcPath.split('/').pop();
+    const name     = srcPath.split('/').pop();
     const destPath = destDir + '/' + name;
-    if (files[destPath] !== undefined) { StrataOS.showToast('File already exists at destination', 'error'); return false; }
-    files[destPath] = files[srcPath];
-    delete files[srcPath];
-    fsSet(files);
+    if (blobStore.has(destPath) || fsGet()[destPath] !== undefined) {
+      StrataOS.showToast('File already exists at destination', 'error'); return false;
+    }
+    if (blobStore.has(srcPath)) {
+      blobStore.set(destPath, blobStore.get(srcPath));
+      blobStore.delete(srcPath);
+    } else {
+      const files = fsGet();
+      files[destPath] = files[srcPath];
+      delete files[srcPath];
+      fsSet(files);
+    }
     return destPath;
   }
 
   function fsCopy(srcPath, destDir) {
-    const files    = fsGet();
-    const name     = srcPath.split('/').pop();
-    let destPath   = destDir + '/' + name;
-    if (files[destPath] !== undefined) {
+    const name   = srcPath.split('/').pop();
+    let destPath = destDir + '/' + name;
+    if (blobStore.has(destPath) || fsGet()[destPath] !== undefined) {
       const ext  = name.includes('.') ? '.' + name.split('.').pop() : '';
       const base = name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name;
       let i = 2;
-      while (files[destDir + '/' + base + '_copy' + (i > 2 ? i : '') + ext] !== undefined) i++;
+      while (blobStore.has(destDir+'/'+base+'_copy'+(i>2?i:'')+ext) ||
+             fsGet()[destDir+'/'+base+'_copy'+(i>2?i:'')+ext] !== undefined) i++;
       destPath = destDir + '/' + base + '_copy' + (i > 2 ? i : '') + ext;
     }
-    files[destPath] = files[srcPath];
-    fsSet(files);
+    if (blobStore.has(srcPath)) {
+      blobStore.set(destPath, blobStore.get(srcPath));
+    } else {
+      const files = fsGet();
+      files[destPath] = files[srcPath];
+      fsSet(files);
+    }
     return destPath;
   }
 
@@ -273,8 +334,7 @@ const Apps = (() => {
 
       function renderGrid() {
         crumb.textContent = currentPath;
-        const files = fsGet();
-        const entries = Object.keys(files).filter(k => {
+        const entries = allPaths().filter(k => {
           const parent = k.replace(/\/[^/]+$/, '') || '/';
           return parent === currentPath;
         });
@@ -579,8 +639,8 @@ const Apps = (() => {
     if (initialContent !== undefined && initialContent !== null) {
       area.value = initialContent;
     } else if (currentSavePath) {
-      const files = fsGet();
-      if (files[currentSavePath]) area.value = files[currentSavePath];
+      const src = fileRead(currentSavePath);
+      if (src) area.value = src;
     }
 
     function updateStatus() {
@@ -627,9 +687,9 @@ const Apps = (() => {
     container.querySelector('#btn-open').addEventListener('click', async () => {
       const result = await showFilePicker({ mode: 'open' });
       if (!result) return;
-      const files = fsGet();
-      if (files[result.path] === undefined) { StrataOS.showToast(`File not found: ${result.name}`, 'error'); return; }
-      area.value = files[result.path];
+      const src = fileRead(result.path);
+      if (src === null) { StrataOS.showToast(`File not found: ${result.name}`, 'error'); return; }
+      area.value = src;
       fnInput.value = result.name;
       currentSavePath = result.path;
       updateStatus();
@@ -667,9 +727,9 @@ const Apps = (() => {
       const predefined = (window.STRATA_MEDIA || []).map(m => ({
         name: m.name, src: m.src, type: m.type || mediaTypeOf(m.name)
       }));
-      const fromFs = Object.entries(fsGet())
-        .filter(([k]) => k.replace(/\/[^/]+$/, '') === '/home/media')
-        .map(([k, v]) => ({ name: k.split('/').pop(), src: v, type: mediaTypeOf(k.split('/').pop()) }));
+      const fromFs = allPaths()
+        .filter(k => k.replace(/\/[^/]+$/, '') === '/home/media')
+        .map(k => ({ name: k.split('/').pop(), src: fileRead(k), type: mediaTypeOf(k.split('/').pop()) }));
       return [...predefined, ...fromFs];
     }
 
@@ -956,9 +1016,8 @@ const Apps = (() => {
         files.forEach(file => {
           const reader = new FileReader();
           reader.onload = ev => {
-            const fs = fsGet();
-            fs['/home/media/' + file.name] = ev.target.result;
-            fsSet(fs);
+            // Always use blobStore for media — base64 blows past sessionStorage quota
+            blobSet('/home/media/' + file.name, ev.target.result);
             done++;
             if (done === files.length) {
               renderList();
@@ -970,7 +1029,6 @@ const Apps = (() => {
             StrataOS.showToast(`Failed to load: ${file.name}`, 'error');
             if (done === files.length) renderList();
           };
-          // Always use readAsDataURL for media files — readAsText corrupts binary
           reader.readAsDataURL(file);
         });
       };
@@ -1017,37 +1075,35 @@ const Apps = (() => {
     let currentPath = '/home/desktop';
 
     function listFiles(path) {
-      return Object.entries(fsGet()).filter(([k]) => {
+      return allPaths().filter(k => {
         const parent = k.replace(/\/[^/]+$/, '') || '/';
         return parent === path;
-      });
+      }).map(k => [k, fileRead(k)]);
     }
 
     // Open a file in the appropriate app based on its type
     function openFile(path) {
       const name = path.split('/').pop();
       const type = fileTypeOf(name);
-      const files = fsGet();
 
       if (type === 'image' || type === 'video' || type === 'audio') {
-        // Copy to /home/media if not already there, then open media player
+        // Mirror into /home/media (blobStore) if not already there
         const mediaPath = '/home/media/' + name;
-        if (!files[mediaPath] && files[path]) {
-          files[mediaPath] = files[path];
-          fsSet(files);
+        const src = fileRead(path);
+        if (src && !blobStore.has(mediaPath)) {
+          blobSet(mediaPath, src);
         }
         Desktop.openMediaPlayer(path);
       } else if (type === 'text') {
-        // Open in text editor with content
-        const content = files[path];
-        Desktop.openTextEditor(name, content);
+        const src = fileRead(path);
+        Desktop.openTextEditor(name, src || '');
       } else {
-        // Unknown — attempt to open in text editor as fallback
-        const content = files[path];
-        if (typeof content === 'string' && !content.startsWith('data:')) {
-          Desktop.openTextEditor(name, content);
+        // Unknown — attempt text editor if it looks like text
+        const src = fileRead(path);
+        if (typeof src === 'string' && !src.startsWith('data:')) {
+          Desktop.openTextEditor(name, src);
         } else {
-          StrataOS.showToast(`Cannot open: unknown or binary file type`, 'warn');
+          StrataOS.showToast('Cannot open: unknown or binary file type', 'warn');
         }
       }
     }
@@ -1119,16 +1175,15 @@ const Apps = (() => {
 
             if (canMedia) {
               menuItems.push({ icon: '🎬', label: 'Open in Media Player', action: () => {
-                const fs = fsGet();
                 const mediaPath = '/home/media/' + name;
-                if (!fs[mediaPath] && fs[path]) { fs[mediaPath] = fs[path]; fsSet(fs); }
+                const src = fileRead(path);
+                if (src && !blobStore.has(mediaPath)) blobSet(mediaPath, src);
                 Desktop.openMediaPlayer(path);
               }});
             }
             if (canEdit || type === 'unknown') {
               menuItems.push({ icon: '📝', label: 'Open in Text Editor', action: () => {
-                const fs = fsGet();
-                Desktop.openTextEditor(name, fs[path] || '');
+                Desktop.openTextEditor(name, fileRead(path) || '');
               }});
             }
 
@@ -1141,13 +1196,11 @@ const Apps = (() => {
                 if (result) { StrataOS.showToast(`Renamed to ${newName}`, 'success'); render(); }
               }},
               { icon: '📋', label: 'Copy', action: () => {
-                const files = fsGet();
-                clipboard = { op: 'copy', path, name, content: files[path] };
+                clipboard = { op: 'copy', path, name, content: fileRead(path) };
                 StrataOS.showToast(`Copied: ${name}`, 'success');
               }},
               { icon: '✂️', label: 'Cut', action: () => {
-                const files = fsGet();
-                clipboard = { op: 'cut', path, name, content: files[path] };
+                clipboard = { op: 'cut', path, name, content: fileRead(path) };
                 StrataOS.showToast(`Cut: ${name}`, 'success');
               }},
               { icon: '📁', label: 'Move to…', action: async () => {
@@ -1238,7 +1291,7 @@ const Apps = (() => {
           const type = fileTypeOf(file.name);
           const useBinary = type === 'image' || type === 'audio' || type === 'video';
 
-          // Skip truly binary/executable files that aren't media
+          // Skip known binary formats that aren't viewable media
           if (!useBinary && type === 'unknown') {
             const ext = (file.name.split('.').pop() || '').toLowerCase();
             const binaryExts = ['exe','dll','bin','so','dylib','class','pyc','wasm','zip','tar','gz','7z','rar','pdf','doc','docx','xls','xlsx','ppt','pptx','db','sqlite'];
@@ -1252,7 +1305,13 @@ const Apps = (() => {
           const reader = new FileReader();
           reader.onload = ev => {
             const destPath = currentPath + '/' + file.name;
-            stored[destPath] = ev.target.result;
+            if (useBinary) {
+              // Binary media: store in memory (blobStore) — sessionStorage quota is too small
+              blobSet(destPath, ev.target.result);
+            } else {
+              // Text files: safe to persist in sessionStorage
+              stored[destPath] = ev.target.result;
+            }
             count++;
             res();
           };
@@ -1265,11 +1324,12 @@ const Apps = (() => {
           }
         });
 
-        // Process files sequentially to avoid freezing
+        // Process files sequentially to avoid blocking the main thread
         for (const file of files) {
           await readFile(file);
         }
 
+        // Only persist text file changes to sessionStorage
         fsSet(stored);
         render();
         const msg = skipped > 0
