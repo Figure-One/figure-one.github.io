@@ -10,6 +10,7 @@ const Terminal = (() => {
   let locked = false;
   let theme = 'dark';
   let isDesktopTerminal = false;
+  let pendingCardLogin = false;
 
   let printQueue = Promise.resolve();
 
@@ -152,13 +153,15 @@ const Terminal = (() => {
   function triggerCardLogin() {
     const users = StrataOS.getUsers();
     if (!users || users.length === 0) {
-      printLine('[ ERROR: No user accounts found \u2014 check STRATA_USERS data ]', 't-error');
+      printLine('[ ERROR: No user accounts found — check STRATA_USERS data ]', 't-error');
       return;
     }
-    printLine('Awaiting keycard presentation\u2026', 't-system', 200).then(() => {
-      setTimeout(() => {
-        Auth.showCardModal(users, user => onLoginComplete(user));
-      }, 3500);
+    printLine('Awaiting keycard presentation…', 't-system', 200).then(() => {
+      printLine('', '', 200);
+      printLine('Press <span class="t-system">ENTER</span> upon presenting keycard.', '', 400);
+      locked = false;
+      pendingCardLogin = true;
+      updatePrompt();
     });
   }
 
@@ -231,10 +234,16 @@ const Terminal = (() => {
     await printDivider(40);
     await printBlank(30);
 
-    await printLine('Type <span class="t-system">help</span> for available commands.', '', 40);
-    await printLine('Type <span class="t-system">startx</span> to launch the graphical desktop environment.', '', 30);
-    await printLine('Type <span class="t-system">logout</span> to end your session.', '', 30);
-    await printBlank(30);
+    const hasScopes = user.scopes.length > 0 &&
+      !(user.scopes.length === 1 && user.scopes[0] === '');
+    if (hasScopes) {
+      await printLine('Type <span class="t-system">help</span> for available commands.', '', 40);
+      await printLine('Type <span class="t-system">startx</span> to launch the graphical desktop environment.', '', 30);
+      await printLine('Type <span class="t-system">logout</span> to end your session.', '', 30);
+    } else {
+      await printLine('Your account has no terminal scope authorisation.', 't-warn', 40);
+      await printLine('Type <span class="t-system">logout</span> to end your session.', '', 30);
+    }
 
     printQueue.then(() => {
       locked = false;
@@ -289,6 +298,18 @@ const Terminal = (() => {
     const raw = inputEl.value.trim();
     inputEl.value = '';
     historyIndex = -1;
+
+    if (pendingCardLogin) {
+      pendingCardLogin = false;
+      locked = true;
+      const users = StrataOS.getUsers();
+      printLine('Reading keycard…', 't-system');
+      printQueue.then(() => setTimeout(() => {
+        Auth.showCardModal(users, user => onLoginComplete(user));
+      }, 400));
+      return;
+    }
+
     if (!raw) return;
 
     history.push(raw);
@@ -331,6 +352,19 @@ const Terminal = (() => {
   ];
 
   function parseCommand(raw) {
+    const user = Auth.getUser();
+    const hasAnyScope = user && user.scopes.length > 0 &&
+      !(user.scopes.length === 1 && user.scopes[0] === '');
+    const restrictedUser = user && !hasAnyScope;
+
+    if (restrictedUser) {
+      const cmd = raw.trim().toLowerCase();
+      if (cmd === 'logout') return cmdLogout();
+      printLine('[ ACCESS DENIED — your account has no terminal scopes ]', 't-error');
+      printLine('  Type <span class="t-system">logout</span> to end your session.', '');
+      return;
+    }
+
     const parts = raw.trim().split(/\s+/);
     const cmd  = parts[0].toLowerCase();
     const args = parts.slice(1);
@@ -410,8 +444,27 @@ const Terminal = (() => {
       case 'stress':  return cmdStress();
       case 'verbose': return printLine('[ verbose mode not available in STRATA-0 ]', 't-warn');
       case 'set':     return printLine('[ use env to view variables; set is restricted ]', 't-warn');
+      case 'keycard':
+      case 'login':
+      case 'card':
+        if (!Auth.getUser()) {
+          pendingCardLogin = false;
+          const users = StrataOS.getUsers();
+          printLine('Presenting keycard…', 't-system');
+          printQueue.then(() => setTimeout(() => {
+            Auth.showCardModal(users, user => onLoginComplete(user));
+          }, 400));
+        } else {
+          printLine('[ already authenticated ]', 't-warn');
+        }
+        return;
+
       default:
-        printLine(`[ command not found: ${escHtml(cmd)} \u2014 type 'help' ]`, 't-error');
+        if (!Auth.getUser()) {
+          printLine('[ authentication required — press <span class="t-system">ENTER</span> upon presenting keycard ]', 't-error');
+          return;
+        }
+        printLine(`[ command not found: ${escHtml(cmd)} — type 'help' ]`, 't-error');
     }
   }
 
@@ -1436,6 +1489,23 @@ const Terminal = (() => {
     updatePrompt,
     lockInput()   { locked = true; },
     unlockInput() { locked = false; },
+    setPendingCardLogin(v) { pendingCardLogin = v; },
+    handleKeyNav(e) {
+      if (!inputEl) return;
+      if (e.key === 'ArrowUp') {
+        if (historyIndex < history.length - 1) {
+          historyIndex++;
+          inputEl.value = history[history.length - 1 - historyIndex] || '';
+        }
+      } else if (e.key === 'ArrowDown') {
+        if (historyIndex > 0) {
+          historyIndex--;
+          inputEl.value = history[history.length - 1 - historyIndex] || '';
+        } else { historyIndex = -1; inputEl.value = ''; }
+      } else if (e.key === 'Tab') {
+        autocomplete();
+      }
+    },
     parseCommand,
     getTheme()    { return theme; }
   };

@@ -14,14 +14,16 @@ layout: null
 </head>
 <body>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+
 <!-- ── Inject data from Jekyll ── -->
 <script>
   window.STRATA_USERS = {{ site.data.users | jsonify }};
   window.STRATA_SITES = {{ site.data.sites | jsonify }};
   // Populate with your persistent media assets here:
   // window.STRATA_MEDIA = [
-  //   { name: 'example.jpg', src: '/assets/media/example.jpg', type: 'image' },
-  //   { name: 'example.mp4', src: '/assets/media/example.mp4', type: 'video' },
+  //   { name: 'example.jpg', src: '/assets/media/strata/example.jpg', type: 'image' },
+  //   { name: 'example.mp4', src: '/assets/media/strata/example.mp4', type: 'video' },
   // ];
   window.STRATA_MEDIA = [];
 </script>
@@ -61,7 +63,10 @@ layout: null
 <!-- ── Card selection modal ── -->
 <div id="card-modal">
   <div class="card-modal-inner">
-    <div class="card-modal-title">FOUNDATION AUTHENTICATION SYSTEM</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+      <div class="card-modal-title" style="margin-bottom:0;">FOUNDATION AUTHENTICATION SYSTEM</div>
+      <button id="card-modal-close" style="background:none;border:none;color:var(--text-muted);font-family:var(--font-mono);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;" title="Dismiss">✕</button>
+    </div>
     <div class="card-modal-subtitle">Select your credential card to proceed with authentication.</div>
     <div class="card-scanner-indicator">
       <div class="scanner-pulse"></div>
@@ -123,46 +128,46 @@ layout: null
   <!-- Dock -->
   <div id="dock">
     <div class="dock-item" data-app="terminal" onclick="Desktop.openTerminal()">
-      <div class="dock-icon">⬛</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/terminal.png" alt="Terminal"/></div>
       <div class="dock-tooltip">Terminal</div>
     </div>
 
     <div class="dock-item" data-app="scipnet" onclick="Desktop.openSCiPnet()">
-      <div class="dock-icon">🔴</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/scipnet.png" alt="SCiPNET"/></div>
       <div class="dock-tooltip">SCiPNET</div>
     </div>
 
     <div class="dock-item" data-app="browser" onclick="dockBrowser()">
-      <div class="dock-icon">🌐</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/browser.png" alt="Browser"/></div>
       <div class="dock-tooltip">Browser</div>
     </div>
 
     <div class="dock-sep"></div>
 
     <div class="dock-item" data-app="editor" onclick="Desktop.openTextEditor()">
-      <div class="dock-icon">📝</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/editor.png" alt="Text Editor"/></div>
       <div class="dock-tooltip">Text Editor</div>
     </div>
 
     <div class="dock-item" data-app="archive" onclick="dockArchive()">
-      <div class="dock-icon">📋</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/archive.png" alt="Archive Writer"/></div>
       <div class="dock-tooltip">Archive Writer</div>
     </div>
 
     <div class="dock-item" data-app="files" onclick="Desktop.openFileExplorer()">
-      <div class="dock-icon">📁</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/files.png" alt="Files"/></div>
       <div class="dock-tooltip">Files</div>
     </div>
 
     <div class="dock-item" data-app="media" onclick="Desktop.openMediaPlayer()">
-      <div class="dock-icon">🎬</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/media.png" alt="Media"/></div>
       <div class="dock-tooltip">Media</div>
     </div>
 
     <div class="dock-sep"></div>
 
     <div class="dock-item" data-app="calc" onclick="Desktop.openCalculator()">
-      <div class="dock-icon">🔢</div>
+      <div class="dock-icon"><img src="/assets/icons/strata/calc.png" alt="Calculator"/></div>
       <div class="dock-tooltip">Calculator</div>
     </div>
   </div>

@@ -49,11 +49,11 @@ const Apps = (() => {
 
   function fileIcon(name) {
     switch (fileTypeOf(name)) {
-      case 'text':    return '📄';
-      case 'image':   return '🖼️';
-      case 'video':   return '🎬';
-      case 'audio':   return '🎵';
-      default:        return '📦';
+      case 'text':    return '<img src="/assets/icons/strata/file-text.png"  style="width:24px;height:24px;object-fit:contain;" alt="text"/>';
+      case 'image':   return '<img src="/assets/icons/strata/file-image.png" style="width:24px;height:24px;object-fit:contain;" alt="image"/>';
+      case 'video':   return '<img src="/assets/icons/strata/file-video.png" style="width:24px;height:24px;object-fit:contain;" alt="video"/>';
+      case 'audio':   return '<img src="/assets/icons/strata/file-audio.png" style="width:24px;height:24px;object-fit:contain;" alt="audio"/>';
+      default:        return '<img src="/assets/icons/strata/file-unknown.png" style="width:24px;height:24px;object-fit:contain;" alt="file"/>';
     }
   }
 
@@ -481,6 +481,18 @@ const Apps = (() => {
     Terminal.updatePrompt();
     Terminal.unlockInput();
 
+    inEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const raw = inEl.value.trim();
+        inEl.value = '';
+        if (raw) Terminal.parseCommand(raw);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Tab') {
+        e.preventDefault();
+        const fakeEvent = new KeyboardEvent('keydown', { key: e.key, bubbles: false });
+        Terminal.handleKeyNav(fakeEvent);
+      }
+    });
+
     Terminal.printLine('STRATA Terminal — Desktop Session', 't-header');
     Terminal.printLine('Type help for commands.', 't-muted');
     Terminal.printBlank();
@@ -768,7 +780,7 @@ const Apps = (() => {
 
         <!-- display area: image/video live here, audio shows art panel -->
         <div id="mp-display" style="flex:1;min-height:0;display:flex;align-items:center;
-                                    justify-content:center;background:#000;overflow:hidden;
+                                    justify-content:center;background:var(--bg-primary);overflow:hidden;
                                     position:relative;">
           <div id="mp-placeholder" style="display:flex;flex-direction:column;align-items:center;
                gap:12px;color:var(--text-muted);font-family:var(--font-mono);font-size:11px;">
@@ -779,7 +791,7 @@ const Apps = (() => {
         <!-- Audio art/info panel — only visible for audio -->
         <div id="mp-audio-panel" style="display:none;flex-direction:column;align-items:center;
              justify-content:center;gap:16px;padding:32px 24px;background:var(--bg-secondary);
-             border-top:1px solid var(--border);flex-shrink:0;">
+             border-top:1px solid var(--border);flex:1;min-height:0;overflow:hidden;">
           <div id="mp-art" style="width:120px;height:120px;background:var(--bg-panel);
                border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
                font-size:48px;flex-shrink:0;">🎵</div>
@@ -888,9 +900,35 @@ const Apps = (() => {
 
     function parseAudioMeta(name) {
       const base = name.replace(/\.[^.]+$/, '');
-      const parts = base.split(' - ');
-      if (parts.length >= 2) return { title: parts.slice(1).join(' - ').trim(), artist: parts[0].trim() };
-      return { title: base, artist: 'Unknown Artist' };
+      return { title: base, artist: '' };
+    }
+
+    function readAudioTags(src) {
+      return new Promise(resolve => {
+        const fallback = { title: null, artist: null, album: null, cover: null };
+        if (!src || !src.startsWith('data:audio') || !window.jsmediatags) {
+          resolve(fallback); return;
+        }
+        try {
+          window.jsmediatags.read(dataURLtoBlob(src), {
+            onSuccess: tag => {
+              const t = tag.tags || {};
+              let cover = null;
+              if (t.picture) {
+                const base64 = t.picture.data.reduce((s, b) => s + String.fromCharCode(b), '');
+                cover = `data:${t.picture.format};base64,${btoa(base64)}`;
+              }
+              resolve({
+                title:  t.title  || null,
+                artist: t.artist || null,
+                album:  t.album  || null,
+                cover,
+              });
+            },
+            onError: () => resolve(fallback)
+          });
+        } catch(e) { resolve(fallback); }
+      });
     }
 
     // ── Render a selected item ────────────────────────────────────────────
@@ -912,12 +950,13 @@ const Apps = (() => {
       // Reset UI panels
       placeholder.style.display = 'none';
       audioPanel.style.display  = 'none';
+      displayEl.style.display   = 'flex';
       controlsEl.style.display  = 'none';
       infoEl.textContent        = item.name;
 
       if (item.type === 'image') {
         // Image: just show it, no controls needed
-        displayEl.style.background = '#000';
+        displayEl.style.background = 'var(--bg-primary)';
         const img = document.createElement('img');
         img.src = item.src;
         img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;';
@@ -929,7 +968,7 @@ const Apps = (() => {
         // No controls for images
 
       } else if (item.type === 'video') {
-        displayEl.style.background = '#000';
+        displayEl.style.background = 'var(--bg-primary)';
         const vid = document.createElement('video');
         vid.src = item.src;
         vid.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
@@ -941,21 +980,41 @@ const Apps = (() => {
 
       } else if (item.type === 'audio') {
         displayEl.style.background = 'var(--bg-panel)';
-        audioPanel.style.display   = 'flex';
+        displayEl.style.display = 'none';
+        audioPanel.style.display = 'flex';
 
-        const meta = parseAudioMeta(item.name);
-        titleEl.textContent  = meta.title;
-        artistEl.textContent = meta.artist || '';
+        const fallbackMeta = parseAudioMeta(item.name);
+        titleEl.textContent  = fallbackMeta.title;
+        artistEl.textContent = '';
+
+        const artEl = container.querySelector('#mp-art');
+        artEl.innerHTML = '';
+        artEl.style.cssText = 'width:120px;height:120px;background:var(--bg-panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;';
+        artEl.appendChild(fallbackIcon('audio'));
 
         const aud = document.createElement('audio');
         aud.src     = item.src;
         aud.preload = 'metadata';
-        // Keep audio element off-screen but in DOM for playback
         aud.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none;';
         displayEl.appendChild(aud);
-        // Show controls
         controlsEl.style.display = 'flex';
         bindControls(aud);
+
+        // Read real tags async — update UI once resolved
+        readAudioTags(item.src).then(tags => {
+          if (tags.title)  titleEl.textContent  = tags.title;
+          if (tags.artist) artistEl.textContent = tags.artist;
+          else if (tags.album) artistEl.textContent = tags.album;
+
+          if (tags.cover) {
+            artEl.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = tags.cover;
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            img.onerror = () => { artEl.innerHTML = ''; artEl.appendChild(fallbackIcon('audio')); };
+            artEl.appendChild(img);
+          }
+        });
 
       } else {
         // Unknown type
@@ -968,39 +1027,155 @@ const Apps = (() => {
     }
 
     // ── Render sidebar list ───────────────────────────────────────────────
-    function renderList() {
+    function extractCoverArt(src) {
+      return readAudioTags(src).then(tags => tags.cover);
+    }
+
+    function makeIconEl(type, src) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:2px;';
+
+      if (type === 'image' && src) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.cssText = 'width:32px;height:32px;object-fit:cover;';
+        img.onerror = () => { img.replaceWith(fallbackIcon(type)); };
+        wrap.appendChild(img);
+      } else if (type === 'video' && src) {
+        wrap.appendChild(fallbackIcon(type));
+        const video = document.createElement('video');
+        video.muted = true;
+        video.preload = 'auto';
+        video.crossOrigin = 'anonymous';
+        video.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:160px;height:120px;pointer-events:none;';
+        document.body.appendChild(video);
+
+        const cleanup = () => {
+          video.src = '';
+          video.load();
+          video.remove();
+        };
+
+        video.addEventListener('error', () => {
+          cleanup();
+        });
+
+        video.addEventListener('seeked', () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, 32, 32);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.style.cssText = 'width:32px;height:32px;object-fit:cover;';
+            img.onerror = () => { img.replaceWith(fallbackIcon(type)); };
+            wrap.innerHTML = '';
+            wrap.appendChild(img);
+          } catch(e) {
+            // canvas tainted or draw failed — leave fallback
+          }
+          cleanup();
+        });
+
+        video.addEventListener('loadeddata', () => {
+          video.currentTime = Math.min(1, (video.duration || 0) * 0.1 || 0.1);
+        });
+
+        video.src = src;
+        video.load();
+      } else {
+        wrap.appendChild(fallbackIcon(type));
+      }
+      return wrap;
+    }
+
+    function fallbackIcon(type) {
+      const img = document.createElement('img');
+      const map = {
+        audio: '/assets/icons/file-audio.png',
+        video: '/assets/icons/file-video.png',
+        image: '/assets/icons/file-image.png',
+      };
+      img.src = map[type] || '/assets/icons/file-unknown.png';
+      img.style.cssText = 'width:24px;height:24px;object-fit:contain;';
+      img.onerror = () => { img.style.display = 'none'; };
+      return img;
+    }
+
+    async function renderList() {
       const all = getMediaList();
       if (all.length === 0) {
         listEl.innerHTML = `<div style="padding:12px;font-family:var(--font-mono);font-size:10px;
           color:var(--text-muted);">No media in /home/media<br><span style="font-size:9px;opacity:0.6;">Click + ADD MEDIA below</span></div>`;
         return;
       }
-      const typeIcon = { video:'🎬', audio:'🎵', image:'🖼️', unknown:'📄' };
-      listEl.innerHTML = all.map((m, i) => `
-        <div class="media-item${i === currentIdx ? ' active' : ''}"
-             style="cursor:pointer;padding:8px 12px;border-bottom:1px solid var(--border);
-                    font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);
-                    transition:all 0.15s;user-select:none;" data-idx="${i}">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="flex-shrink:0;">${typeIcon[m.type]||'📄'}</span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.name}</span>
-          </div>
-          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;">${m.type}</div>
-        </div>`).join('');
 
-      listEl.querySelectorAll('.media-item').forEach(el => {
-        el.addEventListener('mouseenter', () => { if (parseInt(el.dataset.idx) !== currentIdx) el.style.background = 'var(--accent-dim)'; el.style.color = 'var(--accent)'; });
-        el.addEventListener('mouseleave', () => { if (parseInt(el.dataset.idx) !== currentIdx) { el.style.background = ''; el.style.color = 'var(--text-secondary)'; } });
-        el.addEventListener('click', () => {
+      // Build DOM items first with fallback icons, then swap in cover art async
+      listEl.innerHTML = '';
+      all.forEach((m, i) => {
+        const item = document.createElement('div');
+        item.className = 'media-item' + (i === currentIdx ? ' active' : '');
+        item.dataset.idx = i;
+        item.style.cssText = `cursor:pointer;padding:8px 12px;border-bottom:1px solid var(--border);
+          font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);
+          transition:all 0.15s;user-select:none;`;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;min-width:0;';
+
+        const iconWrap = makeIconEl(m.type, (m.type === 'image' || m.type === 'video') ? m.src : null);
+        iconWrap.dataset.iconIdx = i;
+
+        const nameEl = document.createElement('span');
+        nameEl.textContent = m.name;
+        nameEl.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;';
+
+        const typeEl = document.createElement('div');
+        typeEl.textContent = m.type;
+        typeEl.style.cssText = 'font-size:9px;color:var(--text-muted);text-transform:uppercase;margin-top:2px;';
+
+        row.appendChild(iconWrap);
+        row.appendChild(nameEl);
+        item.appendChild(row);
+        item.appendChild(typeEl);
+        listEl.appendChild(item);
+
+        item.addEventListener('mouseenter', () => {
+          if (parseInt(item.dataset.idx) !== currentIdx) item.style.background = 'var(--accent-dim)';
+          item.style.color = 'var(--accent)';
+        });
+        item.addEventListener('mouseleave', () => {
+          if (parseInt(item.dataset.idx) !== currentIdx) { item.style.background = ''; item.style.color = 'var(--text-secondary)'; }
+        });
+        item.addEventListener('click', () => {
           const prev = listEl.querySelector('.media-item.active');
           if (prev) { prev.classList.remove('active'); prev.style.background = ''; prev.style.color = 'var(--text-secondary)'; }
-          currentIdx = parseInt(el.dataset.idx);
-          el.classList.add('active');
-          el.style.background = 'var(--accent-dim)';
-          el.style.color = 'var(--accent)';
+          currentIdx = parseInt(item.dataset.idx);
+          item.classList.add('active');
+          item.style.background = 'var(--accent-dim)';
+          item.style.color = 'var(--accent)';
           renderItem(all[currentIdx]);
         });
       });
+
+      // Now async-swap cover art for audio items
+      for (let i = 0; i < all.length; i++) {
+        const m = all[i];
+        if (m.type !== 'audio') continue;
+        const coverSrc = await extractCoverArt(m.src);
+        if (!coverSrc) continue;
+        const iconWrap = listEl.querySelector(`[data-icon-idx="${i}"]`);
+        if (!iconWrap) continue;
+        iconWrap.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = coverSrc;
+        img.style.cssText = 'width:32px;height:32px;object-fit:cover;';
+        img.onerror = () => { img.replaceWith(fallbackIcon('audio')); };
+        iconWrap.appendChild(img);
+      }
     }
 
     // ── Add media button ──────────────────────────────────────────────────
@@ -1036,6 +1211,15 @@ const Apps = (() => {
     });
 
     renderList();
+
+    function dataURLtoBlob(dataURL) {
+      const [header, data] = dataURL.split(',');
+      const mime = header.match(/:(.*?);/)[1];
+      const binary = atob(data);
+      const arr = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+      return new Blob([arr], { type: mime });
+    }
 
     // If called with a pre-selected path (from file explorer), open it
     if (openPath) {

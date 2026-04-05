@@ -47,7 +47,7 @@ body.dark-mode {
   --text-primary: #d9d9d9;
   --text-secondary: #a0a0a0;
   --text-muted: #696969;
-  --border: rgba(50, 50, 50, 0.2);
+  --border: rgba(128, 128, 128, 0.2);
   --border-solid: rgba(255,255,255,0.06);
   --panel-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
 }
@@ -104,7 +104,7 @@ html, body {
   );
 }
 
-/* === TRON CORNER DECORATORS === */
+/* === CORNER DECORATORS === */
 .corner-deco {
   position: fixed; width: 40px; height: 40px; pointer-events: none; z-index: 2;
 }
@@ -263,7 +263,7 @@ html, body {
   color: rgba(255,255,255,0.3); letter-spacing: 0.1em;
 }
 
-/* Tron scan line on card hover */
+/* Scan line on card hover */
 .id-card::after {
   content: ''; position: absolute;
   left: 0; right: 0; height: 2px;
@@ -522,6 +522,12 @@ html, body {
   opacity: 0; pointer-events: none;
   transition: all var(--transition);
   box-shadow: var(--panel-shadow);
+}
+.dock-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
 }
 
 /* Dock separator */
@@ -1097,11 +1103,11 @@ html, body {
 
 .media-display {
   flex: 1 1 0;
-  min-height: 0;  /* critical: lets it shrink */
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #000;
+  background: var(--bg-primary);
   overflow: hidden;
 }
 

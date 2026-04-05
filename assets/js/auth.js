@@ -126,6 +126,20 @@ const Auth = (() => {
 
     grid.innerHTML = users.map((u, i) => buildCardHTML(u, i)).join('');
     modal.classList.add('visible');
+
+    const closeBtn = document.getElementById('card-modal-close');
+
+    if (closeBtn) {
+      const freshBtn = closeBtn.cloneNode(true);
+      closeBtn.parentNode.replaceChild(freshBtn, closeBtn);
+      freshBtn.addEventListener('click', () => {
+        modal.classList.remove('visible');
+        Terminal.unlockInput();
+        Terminal.printLine('Keycard not found. Press <span class="t-system">ENTER</span> to try again.', 't-muted');
+        Terminal.setPendingCardLogin(true);
+        document.getElementById('terminal-input')?.focus();
+      });
+    }
   }
 
   function hideCardModal() {
