@@ -1157,3 +1157,8 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.acs-input, .acs-select {
+  width: 100%;
+  box-sizing: border-box;
+}

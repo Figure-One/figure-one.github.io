@@ -21,8 +21,10 @@ const StrataOS = (() => {
     startStatusClock();
     await runBootScreen();
 
-    // If a persisted session exists, skip auth and go straight to desktop
-    if (Auth.getUser()) {
+    // Try to resume a persisted session — only succeeds for CL1+ users.
+    // CL0 sessions are rejected and cleared by tryResumeSession().
+    const resumedUser = Auth.tryResumeSession();
+    if (resumedUser) {
       Desktop.launch();
       return;
     }

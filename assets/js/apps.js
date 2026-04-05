@@ -1431,22 +1431,26 @@ const Apps = (() => {
     const RISK_COLORS       = {Notice:'var(--cl-1)',Caution:'var(--cl-2)',Warning:'var(--cl-3)',Danger:'var(--cl-4)',Critical:'var(--cl-5)'};
     const CONTAIN_COLORS    = {Safe:'var(--cl-1)',Euclid:'var(--cl-3)',Keter:'var(--cl-5)',
       Neutralized:'#888',Pending:'#888',Explained:'#888',Esoteric:'#888'};
+    const CL_LABELS = {1:'Unrestricted',2:'Restricted',3:'Confidential',4:'Secret',5:'Top Secret',6:'Cosmic Top Secret'};
 
-    container.style.display       = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.height        = '100%';
-    container.style.overflow      = 'hidden';
+    container.style.cssText = 'display:flex;flex-direction:column;height:100%;overflow:hidden;';
 
     container.innerHTML = `
-      <div class="archive-writer" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+      <div style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+
+        <!-- Toolbar -->
         <div class="archive-toolbar">
           <span class="archive-toolbar-title">ARCHIVE WRITER — FOUNDATION DOCUMENT SYSTEM</span>
-          <button class="editor-btn" onclick="archiveSave()">SAVE (SESSION)</button>
-          <button class="editor-btn" onclick="archiveExport()">EXPORT .TXT</button>
-          <button class="editor-btn" onclick="archiveClear()">NEW DOCUMENT</button>
+          <button class="editor-btn" id="aw-btn-import">IMPORT</button>
+          <button class="editor-btn" id="aw-btn-save">SAVE (SESSION)</button>
+          <button class="editor-btn" id="aw-btn-export">EXPORT .TXT</button>
+          <button class="editor-btn" id="aw-btn-clear">NEW DOCUMENT</button>
         </div>
+
+        <!-- Scrollable body -->
         <div class="archive-body" id="archive-body">
 
+          <!-- ACS Preview Bar -->
           <div>
             <div class="section-label" style="margin-bottom:8px;">ACS CLASSIFICATION BAR PREVIEW</div>
             <div class="acs-bar" id="acs-bar-preview">
@@ -1477,9 +1481,10 @@ const Apps = (() => {
             </div>
           </div>
 
+          <!-- Metadata row -->
           <div>
-            <div class="section-label">DOCUMENT METADATA</div>
-            <div class="acs-form-grid" style="margin-top:12px;">
+            <div class="section-label" style="margin-bottom:10px;">DOCUMENT METADATA</div>
+            <div style="display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:10px;width:100%;box-sizing:border-box;">
               <div class="acs-field">
                 <label class="acs-label">Item Number</label>
                 <input class="acs-input" id="aw-item" placeholder="SCP-XXXX" oninput="awUpdate()"/>
@@ -1499,9 +1504,10 @@ const Apps = (() => {
             </div>
           </div>
 
+          <!-- ACS Classification row -->
           <div>
-            <div class="section-label">ACS CLASSIFICATION</div>
-            <div class="acs-form-grid" style="margin-top:12px;">
+            <div class="section-label" style="margin-bottom:10px;">ACS CLASSIFICATION</div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;box-sizing:border-box;">
               <div class="acs-field">
                 <label class="acs-label">Clearance Level</label>
                 <select class="acs-select" id="aw-clearance" onchange="awUpdate()">
@@ -1515,7 +1521,7 @@ const Apps = (() => {
                 </select>
               </div>
               <div class="acs-field">
-                <label class="acs-label">Secondary / Esoteric Class</label>
+                <label class="acs-label">Secondary Class</label>
                 <select class="acs-select" id="aw-secondary" onchange="awUpdate()">
                   ${SECONDARY_CLASSES.map(c => `<option value="${c}">${c}</option>`).join('')}
                 </select>
@@ -1535,40 +1541,54 @@ const Apps = (() => {
             </div>
           </div>
 
-          <div id="acs-hint-block" style="border:1px solid var(--border);padding:12px 16px;
+          <!-- Classification guide -->
+          <div style="border:1px solid var(--border);padding:10px 14px;
             background:var(--bg-secondary);font-family:var(--font-mono);font-size:10px;
             color:var(--text-muted);line-height:1.7;">
-            <span style="color:var(--accent);">CLASSIFICATION GUIDE</span><br>
-            <b style="color:var(--text-secondary);">Containment:</b> Safe · Euclid · Keter · Neutralized · Esoteric<br>
-            <b style="color:var(--text-secondary);">Disruption:</b> Dark → Vlam → Keneq → Ekhi → Amida<br>
-            <b style="color:var(--text-secondary);">Risk:</b> Notice → Caution → Warning → Danger → Critical
+            <span style="color:var(--accent);">CLASSIFICATION GUIDE</span>
+            &nbsp;·&nbsp; <b style="color:var(--text-secondary);">Containment:</b> Safe · Euclid · Keter · Neutralized · Esoteric
+            &nbsp;·&nbsp; <b style="color:var(--text-secondary);">Disruption:</b> Dark → Vlam → Keneq → Ekhi → Amida
+            &nbsp;·&nbsp; <b style="color:var(--text-secondary);">Risk:</b> Notice → Caution → Warning → Danger → Critical
           </div>
 
-          <div>
+          <!-- SCP field -->
+          <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
             <div class="section-label">SPECIAL CONTAINMENT PROCEDURES</div>
-            <textarea class="archive-content-area" id="aw-scp" rows="5"
+            <textarea class="archive-content-area" id="aw-scp"
+              style="width:100%;box-sizing:border-box;min-height:120px;"
               placeholder="Describe containment procedures…"></textarea>
           </div>
-          <div>
+
+          <!-- Description field -->
+          <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
             <div class="section-label">DESCRIPTION</div>
-            <textarea class="archive-content-area" id="aw-desc" rows="8"
+            <textarea class="archive-content-area" id="aw-desc"
+              style="width:100%;box-sizing:border-box;min-height:160px;"
               placeholder="Describe the anomaly…"></textarea>
           </div>
-          <div>
+
+          <!-- Addenda field -->
+          <div style="display:flex;flex-direction:column;gap:6px;width:100%;">
             <div class="section-label">ADDENDA / INCIDENT LOGS (OPTIONAL)</div>
-            <textarea class="archive-content-area" id="aw-addenda" rows="6"
-              placeholder="Supplemental logs…"></textarea>
+            <textarea class="archive-content-area" id="aw-addenda"
+              style="width:100%;box-sizing:border-box;min-height:120px;"
+              placeholder="Supplemental logs, interview transcripts, incident reports…"></textarea>
           </div>
 
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="archive-save-btn" onclick="archiveSave()">SAVE TO SESSION</button>
-            <button class="archive-save-btn" onclick="archiveExport()">EXPORT AS .TXT</button>
+          <!-- Footer actions -->
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-bottom:8px;">
+            <button class="archive-save-btn" id="aw-foot-save">SAVE TO SESSION</button>
+            <button class="archive-save-btn" id="aw-foot-export">EXPORT AS .TXT</button>
+            <button class="archive-save-btn" id="aw-foot-import"
+              style="border-color:var(--text-muted);color:var(--text-muted);">IMPORT FROM .TXT</button>
             <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted);margin-left:auto;">
-              Session-only unless exported.</span>
+              Output format: SCP Wiki (Wikidot). Session-only unless exported.</span>
           </div>
+
         </div>
       </div>`;
 
+    // ── Context menus on textareas ────────────────────────────────────────
     ['aw-scp','aw-desc','aw-addenda'].forEach(id => {
       const el = container.querySelector('#' + id);
       if (!el) return;
@@ -1580,19 +1600,20 @@ const Apps = (() => {
           { icon: '📌', label: 'Paste', action: () => document.execCommand('paste') },
           'sep',
           { icon: '🗑️', label: 'Clear field', danger: true, action: async () => {
-            const ok = await showConfirmModal(`Clear this field?`);
+            const ok = await showConfirmModal('Clear this field?');
             if (ok) el.value = '';
           }},
         ]);
       });
     });
 
+    // ── awUpdate — sync preview bar ───────────────────────────────────────
     window.awUpdate = function() {
-      const item      = document.getElementById('aw-item')?.value     || 'SCP-XXXX';
+      const item      = document.getElementById('aw-item')?.value      || 'SCP-XXXX';
       const clearance = document.getElementById('aw-clearance')?.value || '1';
       const contain   = document.getElementById('aw-contain')?.value   || 'Safe';
       const secondary = document.getElementById('aw-secondary')?.value || 'None';
-      const disrupt   = document.getElementById('aw-disruption')?.value|| 'Dark';
+      const disrupt   = document.getElementById('aw-disruption')?.value || 'Dark';
       const risk      = document.getElementById('aw-risk')?.value      || 'Notice';
 
       document.getElementById('acs-prev-item').textContent       = item;
@@ -1608,9 +1629,213 @@ const Apps = (() => {
       if (cellContain) { cellContain.style.background = CONTAIN_COLORS[contain]    || '#888'; cellContain.style.color = '#fff'; }
       if (cellDisrupt) { cellDisrupt.style.background = DISRUPTION_COLORS[disrupt] || '#888'; cellDisrupt.style.color = '#fff'; }
       if (cellRisk)    { cellRisk.style.background    = RISK_COLORS[risk]           || '#888'; cellRisk.style.color    = '#fff'; }
+
+      // Hide secondary cell if None
+      const secCell = document.getElementById('acs-cell-secondary');
+      if (secCell) secCell.style.display = secondary === 'None' ? 'none' : '';
     };
 
-    window.archiveSave = function() {
+    // ── buildArchiveDoc — Wikidot/SCP wiki format ─────────────────────────
+    function buildArchiveDoc() {
+      const item      = document.getElementById('aw-item')?.value      || 'SCP-XXXX';
+      const title     = document.getElementById('aw-title')?.value     || '';
+      const author    = document.getElementById('aw-author')?.value    || '';
+      const date      = document.getElementById('aw-date')?.value      || '';
+      const clearance = parseInt(document.getElementById('aw-clearance')?.value) || 1;
+      const contain   = (document.getElementById('aw-contain')?.value  || 'Safe').toLowerCase();
+      const secondary = document.getElementById('aw-secondary')?.value || 'None';
+      const disrupt   = (document.getElementById('aw-disruption')?.value || 'Dark').toLowerCase();
+      const risk      = (document.getElementById('aw-risk')?.value      || 'Notice').toLowerCase();
+      const scp       = document.getElementById('aw-scp')?.value        || '';
+      const desc      = document.getElementById('aw-desc')?.value       || '';
+      const addenda   = document.getElementById('aw-addenda')?.value    || '';
+
+      const hasSecondary = secondary !== 'None';
+      const secLower = secondary.toLowerCase();
+
+      // Build the [[include component:anomaly-class-bar-source ...]] block
+      const acsLines = [
+        `[[include :scp-wiki:component:anomaly-class-bar-source`,
+        ``,
+        `|item-number= ${item}`,
+        ``,
+        `|clearance= ${clearance}`,
+        ``,
+        `|container-class= ${contain}`,
+        ``,
+      ];
+      if (hasSecondary) {
+        acsLines.push(`|secondary-class= ${secLower}`);
+        acsLines.push(``);
+        acsLines.push(`|secondary-icon= http://scp-wiki.wdfiles.com/local--files/component%3Aanomaly-class-bar/${secLower}-icon.svg`);
+        acsLines.push(``);
+      } else {
+        acsLines.push(`|secondary-class= none`);
+        acsLines.push(``);
+      }
+      acsLines.push(`|disruption-class= ${disrupt}`);
+      acsLines.push(``);
+      acsLines.push(`|risk-class= ${risk}`);
+      acsLines.push(``);
+      acsLines.push(`]]`);
+
+      const parts = [
+        `[[>]]`,
+        `[[module Rate]]`,
+        `[[/>]]`,
+        ``,
+        acsLines.join('\n'),
+        `----`,
+        `**Item #:** ${item}${title ? ' — ' + title : ''}`,
+        ``,
+        `**Object Class:** ${contain.charAt(0).toUpperCase() + contain.slice(1)}${hasSecondary ? ' (' + secondary + ')' : ''}`,
+        ``,
+        `**Special Containment Procedures:** ${scp}`,
+        ``,
+        `**Description:** ${desc}`,
+      ];
+
+      if (addenda.trim()) {
+        parts.push(``);
+        parts.push(`----`);
+        parts.push(``);
+        parts.push(addenda);
+      }
+
+      // Footer metadata comment block
+      parts.push(``);
+      parts.push(`[[footnoteblock]]`);
+      parts.push(``);
+      parts.push(`[[div class="footer-wikiwalk-nav"]]`);
+      parts.push(`[[=]]`);
+      const num = item.replace(/[^0-9]/g, '');
+      const prev = num ? `SCP-${parseInt(num)-1}` : 'SCP-PREV';
+      const next = num ? `SCP-${parseInt(num)+1}` : 'SCP-NEXT';
+      parts.push(`<< [[[${prev}]]] | ${item} | [[[${next}]]] >>`);
+      parts.push(`[[/=]]`);
+      parts.push(`[[/div]]`);
+
+      if (author || date) {
+        parts.push(``);
+        parts.push(`<!-- Author: ${author} | Date: ${date} | Clearance: ${clearance} — ${CL_LABELS[clearance] || ''} -->`);
+      }
+
+      return parts.join('\n');
+    }
+
+    // ── parseArchiveDoc — parse Wikidot format back into fields ──────────
+    function parseArchiveDoc(text) {
+      const result = {
+        item: '', title: '', author: '', date: '',
+        clearance: '1', contain: 'Safe', secondary: 'None',
+        disrupt: 'Dark', risk: 'Notice',
+        scp: '', desc: '', addenda: ''
+      };
+
+      // ACS bar fields
+      const extractACS = (key) => {
+        const m = text.match(new RegExp(`\\|${key}=\\s*([^\\n|\\]]+)`));
+        return m ? m[1].trim() : null;
+      };
+
+      const itemNum    = extractACS('item-number');
+      const clearance  = extractACS('clearance');
+      const container  = extractACS('container-class');
+      const secondary  = extractACS('secondary-class');
+      const disruption = extractACS('disruption-class');
+      const riskC      = extractACS('risk-class');
+
+      if (itemNum)    result.item      = itemNum;
+      if (clearance)  result.clearance = clearance;
+      if (container)  result.contain   = container.charAt(0).toUpperCase() + container.slice(1);
+      if (secondary && secondary.toLowerCase() !== 'none') {
+        result.secondary = secondary.charAt(0).toUpperCase() + secondary.slice(1);
+      }
+      if (disruption) result.disrupt = disruption.charAt(0).toUpperCase() + disruption.slice(1);
+      if (riskC)      result.risk    = riskC.charAt(0).toUpperCase() + riskC.slice(1);
+
+      // Item # and title from **Item #:** line
+      const itemLine = text.match(/\*\*Item #:\*\*\s*([^\n—\-]+?)(?:\s*[—\-]+\s*(.+))?$/m);
+      if (itemLine) {
+        result.item  = itemLine[1].trim() || result.item;
+        result.title = (itemLine[2] || '').trim();
+      }
+
+      // SCP procedures — everything after **Special Containment Procedures:** up to next **
+      const scpM = text.match(/\*\*Special Containment Procedures:\*\*\s*([\s\S]*?)(?=\n\n\*\*Description:|$)/i);
+      if (scpM) result.scp = scpM[1].trim();
+
+      // Description — everything after **Description:** up to ---- or footnoteblock
+      const descM = text.match(/\*\*Description:\*\*\s*([\s\S]*?)(?=\n----|\[\[footnoteblock\]\]|$)/i);
+      if (descM) result.desc = descM[1].trim();
+
+      // Addenda — between the ---- after description and [[footnoteblock]]
+      const addendaM = text.match(/\*\*Description:\*\*[\s\S]*?\n----\n([\s\S]*?)(?=\[\[footnoteblock\]\]|$)/i);
+      if (addendaM) result.addenda = addendaM[1].trim();
+
+      // Author / date from comment
+      const metaM = text.match(/<!--\s*Author:\s*([^|]*)\s*\|\s*Date:\s*([^|]*)\s*\|/);
+      if (metaM) {
+        result.author = metaM[1].trim();
+        result.date   = metaM[2].trim();
+      }
+
+      return result;
+    }
+
+    // ── populateFields — fill form from parsed data ───────────────────────
+    function populateFields(data) {
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val !== undefined && val !== null) el.value = val;
+      };
+
+      setVal('aw-item',      data.item);
+      setVal('aw-title',     data.title);
+      setVal('aw-author',    data.author);
+      setVal('aw-date',      data.date);
+      setVal('aw-clearance', data.clearance);
+
+      // Dropdowns need case-insensitive match
+      const matchOption = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el || !val) return;
+        const opt = Array.from(el.options).find(o => o.value.toLowerCase() === val.toLowerCase());
+        if (opt) el.value = opt.value;
+      };
+      matchOption('aw-contain',   data.contain);
+      matchOption('aw-secondary', data.secondary);
+      matchOption('aw-disruption', data.disrupt);
+      matchOption('aw-risk',      data.risk);
+
+      setVal('aw-scp',     data.scp);
+      setVal('aw-desc',    data.desc);
+      setVal('aw-addenda', data.addenda);
+
+      awUpdate();
+    }
+
+    // ── Import handler ────────────────────────────────────────────────────
+    function doImport() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.txt,text/plain';
+      input.onchange = async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const text = await file.text();
+        const data = parseArchiveDoc(text);
+        populateFields(data);
+        StrataOS.showToast(`Imported: ${file.name}`, 'success');
+      };
+      input.click();
+    }
+
+    // ── Button wiring ─────────────────────────────────────────────────────
+    container.querySelector('#aw-btn-import').addEventListener('click', doImport);
+    container.querySelector('#aw-foot-import').addEventListener('click', doImport);
+
+    const doSave = () => {
       const item = document.getElementById('aw-item')?.value || 'untitleddoc';
       const doc  = buildArchiveDoc();
       const files = fsGet();
@@ -1619,7 +1844,7 @@ const Apps = (() => {
       StrataOS.showToast(`Saved: ${item}.txt`, 'success');
     };
 
-    window.archiveExport = function() {
+    const doExport = () => {
       const item = document.getElementById('aw-item')?.value || 'untitleddoc';
       const doc  = buildArchiveDoc();
       const blob = new Blob([doc], { type: 'text/plain' });
@@ -1629,7 +1854,7 @@ const Apps = (() => {
       a.click();
     };
 
-    window.archiveClear = async function() {
+    const doClear = async () => {
       const ok = await showConfirmModal('Clear all fields and start a new document?');
       if (!ok) return;
       ['aw-item','aw-title','aw-author','aw-scp','aw-desc','aw-addenda'].forEach(id => {
@@ -1637,54 +1862,26 @@ const Apps = (() => {
         if (el) el.value = '';
       });
       document.getElementById('aw-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('aw-clearance').value = '1';
+      document.getElementById('aw-contain').value   = 'Safe';
+      document.getElementById('aw-secondary').value = 'None';
+      document.getElementById('aw-disruption').value = 'Dark';
+      document.getElementById('aw-risk').value       = 'Notice';
       awUpdate();
     };
 
-    function buildArchiveDoc() {
-      const item      = document.getElementById('aw-item')?.value      || 'SCP-XXXX';
-      const title     = document.getElementById('aw-title')?.value     || '';
-      const author    = document.getElementById('aw-author')?.value    || '';
-      const date      = document.getElementById('aw-date')?.value      || '';
-      const clearance = document.getElementById('aw-clearance')?.value || '1';
-      const contain   = document.getElementById('aw-contain')?.value   || 'Safe';
-      const secondary = document.getElementById('aw-secondary')?.value || 'None';
-      const disrupt   = document.getElementById('aw-disruption')?.value|| 'Dark';
-      const risk      = document.getElementById('aw-risk')?.value      || 'Notice';
-      const scp       = document.getElementById('aw-scp')?.value       || '';
-      const desc      = document.getElementById('aw-desc')?.value      || '';
-      const addenda   = document.getElementById('aw-addenda')?.value   || '';
-      const cl_labels = {1:'Unrestricted',2:'Restricted',3:'Confidential',4:'Secret',5:'Top Secret',6:'Cosmic Top Secret'};
+    container.querySelector('#aw-btn-save').addEventListener('click', doSave);
+    container.querySelector('#aw-btn-export').addEventListener('click', doExport);
+    container.querySelector('#aw-btn-clear').addEventListener('click', doClear);
+    container.querySelector('#aw-foot-save').addEventListener('click', doSave);
+    container.querySelector('#aw-foot-export').addEventListener('click', doExport);
 
-      return [
-        '═'.repeat(70),
-        `ITEM #: ${item}${title ? '  —  ' + title : ''}`,
-        `AUTHOR: ${author}  |  DATE: ${date}`,
-        '═'.repeat(70),
-        '',
-        `CLEARANCE LEVEL: ${clearance} — ${cl_labels[clearance] || ''}`,
-        `CONTAINMENT CLASS: ${contain.toUpperCase()}`,
-        secondary !== 'None' ? `SECONDARY CLASS: ${secondary.toUpperCase()}` : '',
-        `DISRUPTION CLASS: ${disrupt.toUpperCase()}`,
-        `RISK CLASS: ${risk.toUpperCase()}`,
-        '',
-        '─'.repeat(70),
-        'SPECIAL CONTAINMENT PROCEDURES',
-        '─'.repeat(70),
-        scp,
-        '',
-        '─'.repeat(70),
-        'DESCRIPTION',
-        '─'.repeat(70),
-        desc,
-        addenda ? '\n' + '─'.repeat(70) + '\nADDENDA\n' + '─'.repeat(70) + '\n' + addenda : '',
-        '',
-        '═'.repeat(70),
-        `END OF DOCUMENT — ${item}`,
-        '═'.repeat(70),
-      ].filter(l => l !== '').join('\n');
-    }
+    // Also expose globally for any inline callers that may remain
+    window.archiveSave   = doSave;
+    window.archiveExport = doExport;
+    window.archiveClear  = doClear;
 
-    window.awUpdate();
+    awUpdate();
   }
 
   return {
