@@ -4,18 +4,18 @@
 
 /* === CSS VARIABLES === */
 :root {
-  --bg-primary: #f0f2f5;
-  --bg-secondary: #e2e6ec;
-  --bg-panel: #ffffff;
-  --bg-dark: #1a1d24;
-  --text-primary: #0d1117;
-  --text-secondary: #4a5568;
-  --text-muted: #8a9ab0;
-  --accent: #00c8ff;
-  --accent-dim: rgba(0,200,255,0.15);
-  --accent-glow: 0 0 8px rgba(0,200,255,0.6), 0 0 20px rgba(0,200,255,0.2);
-  --accent-glow-strong: 0 0 12px rgba(0,200,255,0.9), 0 0 30px rgba(0,200,255,0.4);
-  --border: rgba(0,200,255,0.25);
+  --bg-primary: #d0d0d0;
+  --bg-secondary: #ececec;
+  --bg-panel: #ececec;
+  --bg-dark: #242431;
+  --text-primary: #171717;
+  --text-secondary: #696969;
+  --text-muted: #b0b0b0;
+  --accent: #ff006a;
+  --accent-dim: rgba(0,0,0,0.15);
+  --accent-glow: 0 0 8px rgba(0,0,0,0.3), 0 0 20px rgba(0,0,0,0.1);
+  --accent-glow-strong: 0 0 12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 0, 0, 0.2);
+  --border: rgba(0,0,0,0.25);
   --border-solid: rgba(0,0,0,0.1);
   --grid-color: rgba(0,200,255,0.06);
   --scanline: rgba(0,0,0,0.03);
@@ -24,7 +24,6 @@
   --success: #009f6b;
   --panel-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 0 0 1px var(--border);
 
-  /* clearance level colours */
   --cl-0: #777777;
   --cl-1: #009f6b;
   --cl-2: #0087bd;
@@ -41,18 +40,15 @@
   --transition-slow: 0.5s cubic-bezier(0.4,0,0.2,1);
 }
 
-/* === DARK MODE === */
 body.dark-mode {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b24;
-  --bg-panel: #1a1d24;
-  --text-primary: #e8ecf2;
-  --text-secondary: #8a9ab0;
-  --text-muted: #4a5568;
-  --border: rgba(0,200,255,0.2);
+  --bg-primary: #000000;
+  --bg-secondary: #090917;
+  --bg-panel: #090917;
+  --text-primary: #d9d9d9;
+  --text-secondary: #a0a0a0;
+  --text-muted: #696969;
+  --border: rgba(50, 50, 50, 0.2);
   --border-solid: rgba(255,255,255,0.06);
-  --grid-color: rgba(0,200,255,0.04);
-  --scanline: rgba(0,0,0,0.15);
   --panel-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
 }
 
@@ -67,7 +63,7 @@ html, body {
   transition: background var(--transition-slow), color var(--transition-slow);
 }
 
-/* === ANIMATED GRID BACKGROUND === */
+/* === ANIMATED GRID BACKGROUND === 
 .grid-bg {
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background-image:
@@ -96,7 +92,7 @@ html, body {
   100% { opacity: 1; }
 }
 
-/* === SCANLINES === */
+/* === SCANLINES === 
 .scanlines {
   position: fixed; inset: 0; pointer-events: none; z-index: 1;
   background: repeating-linear-gradient(
@@ -128,7 +124,7 @@ html, body {
   position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 100;
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
   animation: accentSweep 4s ease-in-out infinite;
-  box-shadow: 0 0 10px rgba(0,200,255,0.8);
+  box-shadow: 0 0 10px rgba(255,0,106,0.8);
 }
 @keyframes accentSweep {
   0%, 100% { opacity: 0.4; }
@@ -415,13 +411,6 @@ html, body {
   background: var(--bg-primary);
   overflow: hidden;
 }
-#desktop-bg .grid-bg-inner {
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(var(--grid-color) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
 
 /* Tron circuit lines on desktop */
 .circuit-line {
@@ -511,7 +500,7 @@ html, body {
 }
 .dock-icon::before {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(0,200,255,0.1) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(255,0,106,0.1) 0%, transparent 60%);
   pointer-events: none;
 }
 .dock-item:hover .dock-icon {
